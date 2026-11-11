@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Syntax-check plugin entry
+        run: |
+          node --check lib/index.js
+          node --check lib/core.js
+          node --check lib/net-scope.js
+          node --check lib/update.js
+          node --check client.js
+          node --input-type=module -e "import('./lib/net-scope.js').then(()=>console.log('net-scope ok'))"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version="$(node -p "require('./package.json').version")"
+          tag="v${version}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "already published: $tag"
+            exit 0
+          fi
+          zip="dsh-purge-unrestricted-${version}.zip"
+          git archive --format=zip --prefix="dsh-purge-unrestricted-${version}/" --output="$zip" HEAD
+          notes="$(mktemp)"
+          {
+            echo "## dsh-purge ${version} — unrestricted fork"
+            echo
+            echo "Base: [HunYiSage/dsh-purge](https://github.com/HunYiSage/dsh-purge) ${version} (Apache-2.0)"
+            echo
+            echo "Differences from upstream:"
+            echo
+            echo '- `lib/net-scope.js` — region / cheat gate neutralized (`isAttackTask`, `isCheatTask`, `publicHostHit`, `taskTargetHit` return constants)'
+            echo '- `lib/index.js` — `installRegionGate(ctx)` no longer invoked'
+            echo '- `skills/redteam/` — 23 local skill docs bundled'
+            echo
+            echo 'Everything else is upstream code. See `FORK-NOTICE.md`.'
+          } > "$notes"
+          gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --notes-file "$notes"
+          test -s "$zip"
+          gh release upload "$tag" "$zip" --clobber
+          echo "published https://github.com/${{ github.repository }}/releases/tag/${tag}"
