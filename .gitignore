@@ -6,6 +6,13 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
+# 魔改宿主补丁包：patch/ 里必须保住 node_modules 子树
+!harness/patch/node_modules/
+!harness/patch/node_modules/**
+
+# 打包产物走 Release，不进 git
+harness/dist/
+
 # 只给本机 Cursor 技能看，不进仓库
 docs/agents/
 .cursor/
