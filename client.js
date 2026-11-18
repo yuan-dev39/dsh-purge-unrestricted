@@ -43,8 +43,7 @@ window.__ModuleLoader__.load({ id: "dsh-purge", factory: (require) => {
 		function apiTimeoutMs(p, init) {
 			const path = String(p || "");
 			const method = String((init && init.method) || "GET").toUpperCase();
-			if (path.indexOf("/dsh-purge/update") !== -1) return method === "POST" ? 180000 : 45000;
-			if (path.indexOf("/dsh-purge/uninstall") !== -1) return 90000;
+						if (path.indexOf("/dsh-purge/uninstall") !== -1) return 90000;
 			if (path.indexOf("/dsh-purge/skill") !== -1) return method === "POST" ? 120000 : 20000;
 			// status 会在"应用"期间被后端的同步落盘阻塞，默认 20s 必然被 abort，界面只会显示"读取失败: timeout"。
 			if (path.indexOf("/dsh-purge/status") !== -1) return 60000;
@@ -1646,104 +1645,13 @@ body[data-ds-dark-theme] .rt-rep-step-no,.dshp-dock[data-theme="dusk"] .rt-rep-s
 				setUpdateNotice({ kind: d.ok === false || d.error ? "error" : "ok", text });
 			}, []);
 
-			const checkUpdate = useCallback((id) => {
-				setUpdateBusy(true);
-				setUpdateJob({ id: id || "", kind: "check" });
-				const tr = tRef.current;
-				setUpdateNotice({ kind: "ok", text: tr("update.checking") });
-				apiJson("/dsh-purge/update")
-					.then((d) => {
-						if (!d || (!d.ok && !d.channel)) throw new Error((d && d.error) || "check failed");
-						applyUpdateInfo(d, tr, "check");
-					})
-					.catch((e) => setUpdateNotice({ kind: "error", text: updateErrorText(tr, e) }))
-					.finally(() => {
-						setUpdateBusy(false);
-						setUpdateJob(null);
-					});
-			}, [applyUpdateInfo]);
-
-			const postUpdate = useCallback((body, kind, id) => {
-				setUpdateBusy(true);
-				setUpdateJob({ id: id || "", kind });
-				const tr = tRef.current;
-				setUpdateNotice({ kind: "ok", text: kind === "switched" || kind === "channel" ? tr("update.switching") : tr("update.applying") });
-				return apiJson("/dsh-purge/update", {
-					method: "POST",
-					headers: { "content-type": "application/json" },
-					body: JSON.stringify(body || {}),
-				})
-					.then((d) => {
-						if (!d || (d.ok === false && d.error)) throw new Error((d && d.error) || "update failed");
-						applyUpdateInfo(d, tr, kind);
-						if (d.needsFullQuit) {
-							suppressRestartAsk.current = false;
-							setAskRestart(true);
-							setUpdateNotice({ kind: "ok", text: tr("restart.official.body") });
-							return d;
-						}
-						if (d.restartAfter) {
-							setUpdateNotice({ kind: "ok", text: tr("update.restarting") });
-							return d;
-						}
-						if (d.applied && d.reloadClient !== false) {
-							setUpdateNotice({ kind: "ok", text: tr("update.reloading") });
-							setTimeout(() => {
-								try { window.location.reload(); } catch { /* ignore */ }
-							}, 280);
-						} else if (d.needRestart) {
-							setAskRestart(true);
-						}
-						return d;
-					})
-					.catch((e) => {
-						setUpdateNotice({ kind: "error", text: updateErrorText(tr, e) });
-						throw e;
-					})
-					.finally(() => {
-						setUpdateBusy(false);
-						setUpdateJob(null);
-					});
-			}, [applyUpdateInfo]);
-
-			const doUpdate = useCallback((id) => {
-				const lane = id === "beta" ? "beta" : "stable";
-				postUpdate({ op: "apply", ref: lane === "beta" ? "beta" : "master", channel: lane }, "done", id).catch(() => {});
-			}, [postUpdate]);
-
-			const changeChannel = useCallback((next) => {
-				if (!next) return;
-				const tr = tRef.current;
-				if (!window.confirm(tr("update.confirmChannel", { version: tr("channel." + next) }))) return;
-				const prevChannel = channel;
-				const prevInfo = updateInfo;
-				setChannel(next);
-				setUpdateInfo((cur) => Object.assign({}, cur || {}, { channel: next }));
-				postUpdate({ op: "channel", channel: next }, "channel", next).catch(() => {
-					setChannel(prevChannel);
-					setUpdateInfo(prevInfo);
-				});
-			}, [channel, postUpdate, updateInfo]);
-
-			const switchSelected = useCallback((id) => {
-				const tr = tRef.current;
-				const ref = pick[id];
-				const versions = ((updateInfo && updateInfo.versions) || []).filter((item) => item.channel === id);
-				const hit = versions.find((item) => item.ref === ref);
-				const label = (hit && (hit.label || hit.version)) || ref;
-				if (!ref) return;
-				if (!window.confirm(tr("update.confirmSwitch", { version: label }))) return;
-				const prevChannel = channel;
-				const prevInfo = updateInfo;
-				if (hit && hit.channel) {
-					setChannel(hit.channel);
-					setUpdateInfo((cur) => Object.assign({}, cur || {}, { channel: hit.channel }));
-				}
-				postUpdate({ op: "switch", ref }, "switched", id).catch(() => {
-					setChannel(prevChannel);
-					setUpdateInfo(prevInfo);
-				});
-			}, [channel, pick, postUpdate, updateInfo]);
+			// [dsh-purge] 检查更新已移除：不再查询远端版本，也没有一键更新入口。
+			const checkUpdate = useCallback(() => {}, []);
+			// [dsh-purge] 更新动作已移除：保留空实现，避免历史代码路径引用未定义。
+			const postUpdate = useCallback(() => Promise.resolve({ ok: false, error: "update-removed" }), []);
+			const doUpdate = useCallback(() => {}, []);
+			const changeChannel = useCallback(() => {}, []);
+			const switchSelected = useCallback(() => {}, []);
 
 			const loadAll = useCallback(() => {
 				const tr = tRef.current;
@@ -1752,7 +1660,6 @@ body[data-ds-dark-theme] .rt-rep-step-no,.dshp-dock[data-theme="dusk"] .rt-rep-s
 						if (d && d.ok) {
 							setState(d);
 							if (d.channel) setChannel(d.channel);
-							if (d.update && d.update.ok && !d.update.error) setUpdateInfo(d.update);
 							if (d.boot_full_quit && !suppressRestartAsk.current) setAskRestart(true);
 						} else {
 							setState({ ok: false, patches_total: 0, patches_applied: 0, patch_status: {}, shim_cmd: "n/a", shim_ps1: "n/a", shim_bin: "n/a", has_backup: false });
@@ -1763,14 +1670,6 @@ body[data-ds-dark-theme] .rt-rep-step-no,.dshp-dock[data-theme="dusk"] .rt-rep-s
 						setState({ ok: false, patches_total: 0, patches_applied: 0, patch_status: {}, shim_cmd: "n/a", shim_ps1: "n/a", shim_bin: "n/a", has_backup: false });
 						setNotice({ kind: "error", text: tr("err.status", { error: e.message }) });
 					});
-				apiJson("/dsh-purge/update")
-					.then((d) => {
-						if (!d) return;
-						if (d.channel) setChannel(d.channel);
-						setUpdateInfo(d);
-						syncPicks(d);
-					})
-					.catch(() => {});
 				apiJson("/dsh-purge/override")
 					.then((d) => {
 						if (d && d.ok) {
@@ -2089,6 +1988,7 @@ body[data-ds-dark-theme] .rt-rep-step-no,.dshp-dock[data-theme="dusk"] .rt-rep-s
 			const channelNow = (updateInfo && updateInfo.channel) || channel || "stable";
 			const localVer = (s && s.plugin_version) || (updateInfo && updateInfo.localVersion) || "";
 			const renderEdition = (id) => {
+				return null; // [dsh-purge] 检查更新已移除
 				const lane = (updateInfo && updateInfo.lanes && updateInfo.lanes[id]) || {};
 				const ceiling = listedCeiling(versions, localVer || (updateInfo && updateInfo.localVersion));
 				const list = versions.filter((item) => item.channel === id && keepListedVersion(item, ceiling));
@@ -7553,110 +7453,8 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
      * 确认后由 host 侧执行 安装 → 重启 dsh web（页面会断开，重启后刷新即可）。
      */
     function VersionBar(props) {
-      const [info, setInfo] = React.useState(null)
-      const [err, setErr] = React.useState(null)
-      const [busy, setBusy] = React.useState(false)
-      const [open, setOpen] = React.useState(false)
-      const [msg, setMsg] = React.useState(null)
-      const [countdown, setCountdown] = React.useState(0)
-
-      const check = (silent) => {
-        if (!silent) setBusy(true)
-        api({ op: 'updateCheck' }).then((r) => {
-          setBusy(false)
-          if (!r || r.ok === false) {
-            /* 开发态或查不到 registry：只显示当前版本，不报错打扰用户 */
-            if (!silent) setErr((r && r.error) || '检查更新失败')
-            api({ op: 'version' }).then((v) => { if (v && v.ok !== false) setInfo(v) }, () => {})
-            return
-          }
-          setErr(null)
-          setInfo(r)
-        }, (e) => {
-          setBusy(false)
-          if (!silent) setErr(String((e && e.message) || e))
-          api({ op: 'version' }).then((v) => { if (v && v.ok !== false) setInfo(v) }, () => {})
-        })
-      }
-      React.useEffect(() => { check(true) }, [])
-
-      const apply = () => {
-        setBusy(true)
-        setMsg(null)
-        api({ op: 'updateApply', target: (info && info.latest) || undefined }).then((r) => {
-          setBusy(false)
-          if (!r || r.ok === false) { setMsg({ err: (r && r.error) || '更新失败' }); return }
-          setMsg({ ok: '已安装 ' + (r.installed || '') + '，正在重启当前宿主…' })
-          /* 重启会断开这个页面：倒计时提示用户稍后刷新 */
-          setCountdown(6)
-          const t = setInterval(() => {
-            setCountdown((n) => {
-              if (n <= 1) { clearInterval(t); window.location.reload(); return 0 }
-              return n - 1
-            })
-          }, 1000)
-        }, (e) => { setBusy(false); setMsg({ err: String((e && e.message) || e) }) })
-      }
-
-      const current = info && info.current ? info.current : (info && info.plugin ? info.plugin.version : null)
-      const latest = info && info.latest ? info.latest : null
-      const hasNew = !!(info && info.updateAvailable)
-      const blockers = (info && info.blockers) || []
-      const notes = (info && info.notes) || []
-      const mode = info && info.install ? info.install.mode : null
-
-      return h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 6 } },
-        h('span', {
-          className: 'rt-tag' + (hasNew ? ' rt-tag-warn' : ''),
-          title: ('当前版本 ' + (current || '未知') + (latest ? '\n最新版本 ' + latest : '')
-            + (mode === 'dev' ? '\n安装方式：开发态（源码软链）' : mode === 'package' ? '\n安装方式：包安装' : '')
-            + (info && info.check_error ? '\n检查失败：' + info.check_error : '')),
-        }, 'v' + (current || '?')),
-        hasNew
-          ? h('button', {
-              className: 'rt-btn rt-btn-primary', disabled: busy,
-              onClick: () => { setOpen(true); setMsg(null) },
-              title: '发现新版本 ' + latest + '：点击查看并一键更新（会重启当前宿主）',
-            }, busy ? '检查中…' : '有新版本 v' + latest)
-          : h('button', {
-              className: 'rt-btn', disabled: busy, onClick: () => check(false),
-              title: '重新检查 npm 上的最新版本',
-            }, busy ? '检查中…' : '检查更新'),
-        open
-          ? h('div', { className: 'rt-modal', 'aria-hidden': 'true', onClick: () => setOpen(false) },
-              h('div', { className: 'rt-modal-box', onClick: (e) => e.stopPropagation() },
-                h('h4', { style: { marginTop: 0 } }, '更新 RedTeam 模式'),
-                h('div', { className: 'rt-kv' }, h('b', null, '当前版本'), h('span', null, current || '未知')),
-                h('div', { className: 'rt-kv' }, h('b', null, '最新版本'), h('span', null, latest || '未知')),
-                h('div', { className: 'rt-kv' }, h('b', null, '安装方式'),
-                  h('span', null, mode === 'dev' ? '开发态（源码软链）' : mode === 'package' ? '包安装（' + ((info.install && info.install.packageManager) || 'npm') + '）' : '未知')),
-                info && info.install && info.install.dir
-                  ? h('div', { className: 'rt-kv' }, h('b', null, '安装位置'), h('span', { className: 'rt-mono' }, info.install.dir))
-                  : null,
-                blockers.length
-                  ? h('div', { className: 'rt-hint' },
-                      h('div', { style: { fontWeight: 600, marginBottom: 4 } }, '现在不能更新：'),
-                      blockers.map((b, i) => h('div', { key: 'b' + i }, '· ' + b)))
-                  : null,
-                notes.length
-                  ? h('div', { className: 'rt-foot', style: { padding: '4px 0' } }, notes.map((n, i) => h('div', { key: 'n' + i }, n)))
-                  : null,
-                h('div', { style: { fontSize: 12, color: 'var(--dsw-alias-label-secondary)', margin: '8px 0' } },
-                  '更新过程：安装新版本 → 自动重启当前宿主（官方 exe / 社区版 / dsh web；当前页面会断开，约 5–10 秒后自动刷新）。'
-                  + '重启前会检查有没有智能体在跑，有就拦住不动。'),
-                msg ? h('div', { className: msg.err ? 'rt-err' : 'rt-foot' }, msg.err || msg.ok) : null,
-                countdown > 0
-                  ? h('div', { className: 'rt-foot' }, '宿主正在重启，' + countdown + ' 秒后自动刷新页面…')
-                  : null,
-                h('div', { style: { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 10 } },
-                  h('button', { className: 'rt-btn', onClick: () => setOpen(false) }, '关闭'),
-                  h('button', {
-                    className: 'rt-btn rt-btn-primary',
-                    disabled: busy || blockers.length > 0 || mode === 'dev',
-                    title: mode === 'dev' ? '开发态安装请用仓库流程升级' : blockers.length ? '先解决上面的阻塞项' : '安装并重启',
-                    onClick: apply,
-                  }, busy ? '更新中…' : '一键更新并重启'))))
-          : null)
+      // [dsh-purge] 检查更新已移除：不查 npm/GitHub，也不提供一键更新。
+      return null
     }
 
     /* ---------------------------------------------------------- 常驻面板主体 */

@@ -20,13 +20,25 @@ function printStatus(state) {
   } else {
     out.push("  插件根 / root  " + core.missingAiBaseMessage());
   }
-  out.push(`  shim 目录      ${state.shim_dir || "未定位 / not found"}`);
+  // 桌面壳不发行 CLI shim（package.json 无 bin、resources/runtime/cli/bin 不存在），
+  // 未定位是预期事实，不该渲染成"出错了"。
+  const shimLabel = state.shim_dir
+    || (state.surface === "desktop" ? "无（桌面壳不发行 CLI shim，预期）" : "未定位 / not found");
+  out.push(`  shim 目录      ${shimLabel}`);
   out.push(`  备份 / backup  ${state.has_backup ? "有 / yes" : "无 / no"}`);
+  if (state.suspect_baks?.length) {
+    out.push(`  ! 备份可疑 ${state.suspect_baks.length} 个（bak 与已清洗文件同字节，回滚对它们无效）`);
+    for (const fp of state.suspect_baks) out.push(`    ! ${fp}`);
+  }
   out.push(`  注入文件       ${state.override_path}`);
   out.push(`  注入状态       ${state.override_status}`);
   out.push("");
+  const notReady = Object.keys(state.patch_status || {})
+    .filter((id) => !core.patchStatusReady(state.patch_status[id], core.ALL_PATCHES.find((p) => String(p.id) === id)));
   out.push(`  补丁 ${state.patches_applied}/${core.ALL_PATCHES.length} 已清洗, ${state.patches_pending} 待清洗`
-    + (state.patches_drifted ? `, ${state.patches_drifted} 漂移（官方原文已改，需更新 pattern）` : ""));
+    + (state.patches_drifted ? `, ${state.patches_drifted} 漂移（官方原文已改，需更新 pattern）` : "")
+    // 不是没打上：可选补丁在本机没有对应上游文件（hooks / 无 preset 的 .agent-presets 等）。
+    + (` · 就绪 ${core.ALL_PATCHES.length - notReady.length}/${core.ALL_PATCHES.length}（未清洗的均为可选补丁，本机无对应文件）`));
   if (state.host_version) {
     const compat = state.host_supported === false ? `  ← 未适配：插件声明 ${state.host_target || "?"}` : "";
     out.push(`  宿主版本 / host  ${state.host_version}${compat}`);
@@ -37,7 +49,9 @@ function printStatus(state) {
     out.push(`    ${mark} [#${String(p.id).padEnd(2)}] ${p.name.padEnd(30)} ${p.layer}/${p.layer_en} — ${s}`);
   }
   out.push("");
-  out.push(`  shim: dsh.cmd=${state.shim_cmd}  dsh.ps1=${state.shim_ps1}  dsh=${state.shim_bin}`);
+  out.push(state.shim_dir
+    ? `  shim: dsh.cmd=${state.shim_cmd}  dsh.ps1=${state.shim_ps1}  dsh=${state.shim_bin}`
+    : `  shim: 桌面壳不发行 CLI shim（预期） ${state.shim_cmd}/${state.shim_ps1}/${state.shim_bin}`);
   return out.join("\n");
 }
 
@@ -96,6 +110,10 @@ async function main() {
         else if (st === "missing") console.log(`  - shim ${fname} 不存在 / missing`);
         else console.log(`  ⚠ shim ${fname}: ${st}`);
       }
+    } else if (state.surface === "desktop") {
+      // 官方桌面安装不发行 CLI shim（package.json 无 bin、resources/runtime/cli/bin 不存在），
+      // 这里没东西可注入是事实，不是失败。
+      console.log("  · 桌面壳不发行 CLI shim，跳过注入（预期） / desktop build ships no CLI shim");
     } else {
       console.log("  ⚠ 未定位 shim 目录，跳过注入");
     }

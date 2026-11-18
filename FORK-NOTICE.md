@@ -12,10 +12,24 @@
 | `package.json` | `repository` / `homepage` / `bugs` / `dsh.install.*` 指向本仓库；`files` 增加 `skills`；新增 `dshPurgeFork` 元数据 | 更新检测与一键安装走本仓库 |
 | `lib/update.js` | `REPO` 常量 → `yuan-dev39/dsh-purge-unrestricted` | 设置页「检测更新」查本仓库 |
 | `client.js` | `welcome.repo` 两处 → 本仓库 | 欢迎页链接 |
-| `lib/redteam/ui.js` | 默认仓库回退 → 本仓库 | 无 homepage 时的仓库推断 |
+| `lib/redteam/ui.js` | 默认仓库回退 → 本仓库（该函数已于 2026-11-18 随「检查更新」功能一并删除） | 无 homepage 时的仓库推断 |
 | `.github/workflows/release.yml` | 去掉 `github.repository == 'HunYiSage/dsh-purge'` 限制，改为读 `package.json` 版本自动发 Release | push 到 `main` 自动出包 |
 
-**其余全部为上游 1.1.90 原样代码**：70 个补丁、`lib/core.js`、`lib/desktop.js`、`lib/identity.js`、`lib/extract-asar.js`、`lib/reapply.js`、`client.js` 界面逻辑、`docs/`、`presets/`、`README*.md`、`release-notes.md` 均未改动。
+### 2026-11-18 追加修复（本仓库 main 领先 `v1.1.90` 标签）
+
+| 文件 | 改动 | 影响 |
+|---|---|---|
+| `lib/index.js` | 删除 `/dsh-purge/update` 路由（GET 查询 + POST 应用/切通道）、启动期 `autoUpdateIfNeeded()` 调用；状态载荷去掉 `update` 字段 | 插件不再向 npm / GitHub 查询版本，也不存在一键更新的 HTTP 入口 |
+| `client.js` | `renderEdition()` 直接 `return null`；`checkUpdate` / `postUpdate` / `doUpdate` / `changeChannel` / `switchSelected` 改为空实现；移除 `/dsh-purge/update` 的请求超时特例 | 设置页只剩「当前版本」，没有「检查更新 / 有新版本 / 一键更新 / 切换通道」按钮 |
+| `lib/redteam/client.js` | `VersionBar()` 函数体改为 `return null` | 演练台右上角不再显示版本条与更新按钮 |
+| `lib/redteam/ui.js` | `handleUpdateOp` 只接受 `op: 'version'`；`'version'` 分支不再调用 `checkLatest()`；删除 `updateCheck` / `updateApply` 分支与 `checkLatest`、`checkLatestFromGithub`、`fetchJsonFromGithub`、`githubRepoOf`、`isPrereleaseName` 五个已无调用方的函数 | 更新类 op 即使被构造也不再触网 |
+| `lib/core.js` | surface 判定不再依赖 `process.execPath`（CLI 跑 apply 时 `desktop` 目标被误判成 `na` 的老问题）；`#28` 重定向目标修正；`suspect_baks` 守卫；启动自愈不覆盖前端 `client.js`（#63） | 桌面壳补丁在 CLI 与桌面两条路径下都能命中，坏 bak 不再被当真原件还原 |
+| `lib/surface.js` | 新增目标存在性/宿主判定辅助 | 配合 `lib/core.js` 的 surface 修正 |
+| `bin/dsh-purge.js` | `--status` 输出按 surface 归并、`na` 与 `skipped` 分开统计 | CLI 计数与面板一致（桌面 71 行 = 70 applied + 1 skipped） |
+
+**其余为上游 1.1.90 原样代码**：86 条补丁定义、`lib/desktop.js`、`lib/identity.js`、`lib/extract-asar.js`、`lib/reapply.js`、`docs/`、`presets/`、`skills/`、`README*.md`、`release-notes.md` 未改动。
+
+> 说明：`lib/update.js` 仍保留上游实现（其 `REPO` 常量指向本仓库），但已无任何调用方；保留是为了不改变 `localVersion()` / `pluginRoot()` 的行为。
 
 ## 上游已知限制（本 fork 未修，属上游行为）
 
