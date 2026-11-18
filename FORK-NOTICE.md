@@ -27,6 +27,15 @@
 | `lib/surface.js` | 新增目标存在性/宿主判定辅助 | 配合 `lib/core.js` 的 surface 修正 |
 | `bin/dsh-purge.js` | `--status` 输出按 surface 归并、`na` 与 `skipped` 分开统计 | CLI 计数与面板一致（桌面 71 行 = 70 applied + 1 skipped） |
 
+### 2026-11-18 第二波修复：补回「继续」入口（上游 1.1.90 缺失）
+
+| 文件 | 改动 | 影响 |
+|---|---|---|
+| `lib/continue-http.js` | **新增**。`continueHttpHandler(getRuntime)` 处理 `/dsh-purge/continue` 的四个端点：`GET ?sessionId=`（状态）、`POST`（发一条「继续」，`{force:true}` 跳过新消息检查）、`GET /settings`、`POST /settings`；未知后缀 404、其它方法 405、运行时未就绪 503、请求体上限 256 KB | 面板的「继续」按钮与设置区终于有后端可打 |
+| `lib/index.js` | 新增 `import { continueHttpHandler }`；`apply()` 里把 `continueRuntime` 挂到 `ctx.__dshPurgeContinue`；`installWebServer` 里注册 `{kind:"prefix", path:"/dsh-purge/continue"}` 路由 | 上游只有客户端代码没有宿主路由，按钮必 404 |
+| `lib/continue-retry.js` | ① `mergeConfig` 不再无脑强制 `autoContinue:false`（原来面板勾选自动续跑永远存不下来）；② 新增 `saveSettings(dshHome, raw)` 原子写 `dsh-purge/continue-retry.json`；③ 新增 `agentOf(ctx, sessionId)` 安全取 agent；④ tracker 增加 `peek()`（只读，不占名额）、`bumpContinue()`、`tagManual()` / `manualTaken()`；⑤ `statusOf` 加 900 ms 结果缓存（面板 1.2 s 轮询，避免每轮都走一遍 turn 检查），发送前后与自动续跑判定时主动失效；⑥ `force` 续跑不占 `continueMax` 名额，但会在该 seq 上打标记，自动续跑不会对同一轮重复发 | 设置能存、状态能刷、续跑计数不再漏、手动续不重复发 |
+| `client.js` | ① 恢复设置区的 `h(ContinueRetrySection, null)`（之前被注释掉）；② 新增 `ContinueMount`，只在 `canContinue` 为真时把「继续」按钮挂进输入框左侧那一排，和「撤销上一步」并排 | 按钮真正出现，且不该出现的时候不占位 |
+
 **其余为上游 1.1.90 原样代码**：86 条补丁定义、`lib/desktop.js`、`lib/identity.js`、`lib/extract-asar.js`、`lib/reapply.js`、`docs/`、`presets/`、`skills/`、`README*.md`、`release-notes.md` 未改动。
 
 > 说明：`lib/update.js` 仍保留上游实现（其 `REPO` 常量指向本仓库），但已无任何调用方；保留是为了不改变 `localVersion()` / `pluginRoot()` 的行为。

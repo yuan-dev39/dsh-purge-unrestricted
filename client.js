@@ -2132,7 +2132,8 @@ body[data-ds-dark-theme] .rt-rep-step-no,.dshp-dock[data-theme="dusk"] .rt-rep-s
 						restartDsh(setNotice, function () {}, t, hostSurface);
 					},
 				}) : null,
-				// h(ContinueRetrySection, null),
+				// [dsh-purge] /dsh-purge/continue/settings 已补齐宿主路由，这块设置恢复显示。
+				h(ContinueRetrySection, null),
 				h("div", { className: "dshp-sub" },
 					h("h4", null, t("override.title")),
 					h("div", { className: "dshp-row", style: { margin: 0 } },
@@ -9059,10 +9060,39 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 			try {
 				const rd = require("react-dom");
 				if (rd && typeof rd.createPortal === "function") {
-					return rd.createPortal(h(RewindSafe, { sessionId, t }), host);
+					return rd.createPortal(
+						h("div", { style: { display: "flex", alignItems: "center", gap: "4px" } },
+							h(RewindSafe, { sessionId, t }),
+							h(ContinueMount, { sessionId, t }),
+						),
+						host,
+					);
 				}
 			} catch { /* host 可能没暴露 react-dom */ }
 			return null;
+		}
+
+		// [dsh-purge] 「继续」入口：上游 ContinueSafe/ContinueButton 写好了却从来没挂载过
+		// （宿主的 /dsh-purge/continue 也一直没注册，点了必 404）。这里补一个挂载点，
+		// 并且只在 canContinue 为真时渲染，避免输入框旁边常驻一个永远灰着的按钮。
+		function ContinueMount(props) {
+			const t = props.t;
+			const sessionId = props.sessionId;
+			const [info, setInfo] = useState(null);
+			useEffect(() => {
+				if (!sessionId) { setInfo(null); return undefined; }
+				let cancelled = false;
+				const tick = () => {
+					apiJson("/dsh-purge/continue?sessionId=" + encodeURIComponent(sessionId))
+						.then((d) => { if (!cancelled && d && d.ok) setInfo(d); })
+						.catch(() => {});
+				};
+				tick();
+				const timer = window.setInterval(tick, 1500);
+				return () => { cancelled = true; window.clearInterval(timer); };
+			}, [sessionId]);
+			if (!sessionId || !info || !info.canContinue) return null;
+			return h(ContinueSafe, { sessionId, t });
 		}
 
 		function installRewindUi(ctx) {
