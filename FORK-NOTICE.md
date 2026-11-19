@@ -27,7 +27,15 @@
 | `lib/surface.js` | 新增目标存在性/宿主判定辅助 | 配合 `lib/core.js` 的 surface 修正 |
 | `bin/dsh-purge.js` | `--status` 输出按 surface 归并、`na` 与 `skipped` 分开统计 | CLI 计数与面板一致（桌面 71 行 = 70 applied + 1 skipped） |
 
-### 2026-11-18 第二波修复：补回「继续」入口（上游 1.1.90 缺失）
+### 2026-11-19 第三波修复：接口语义统一 + 命令/工具兜底
+
+| 文件 | 改动 | 为什么 |
+| --- | --- | --- |
+| `lib/index.js` | 14 处内联 405 + `methodNotAllowed()` 全部改成 JSON 体（`{ok:false, error:"只支持 GET"}`），带 `content-type: application/json` | 原来 `writeHead(405); response.end()` 是空体，前端 `apiJson` 解析失败只能报 `405 non-json: `，用户看不到任何原因 |
+| `lib/index.js` | `/rewind` 命令 handler 的 `analyzeRewind` / `applyRewind` 包 try/catch，异常转成 `{kind:"error", text:"回退不可用：…"}` | 命令 handler 抛异常会冒到宿主命令层，整条命令直接崩 |
+| `lib/index.js` | `purge_status` / `purge_apply` / `purge_revert` 三个工具 `execute()` 包 try/catch，异常转成 `{text:"ERROR: …"}` | 工具注册表里抛异常会把整次模型工具调用打成红色失败，模型拿不到任何上下文 |
+
+## 2026-11-18 第二波修复：补回「继续」入口（上游 1.1.90 缺失）
 
 | 文件 | 改动 | 影响 |
 |---|---|---|
