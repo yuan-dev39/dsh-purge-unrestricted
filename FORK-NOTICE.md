@@ -27,7 +27,14 @@
 | `lib/surface.js` | 新增目标存在性/宿主判定辅助 | 配合 `lib/core.js` 的 surface 修正 |
 | `bin/dsh-purge.js` | `--status` 输出按 surface 归并、`na` 与 `skipped` 分开统计 | CLI 计数与面板一致（桌面 71 行 = 70 applied + 1 skipped） |
 
-### 2026-11-19 第三波修复：接口语义统一 + 命令/工具兜底
+### 2026-11-19 第四波修复：status 端点性能
+
+| 文件 | 改动 | 为什么 |
+| --- | --- | --- |
+| `lib/core.js` | `gatherState()` 加 1.5 s 结果缓存 + `gatherState({fresh:true})` 旁路 + `invalidateGatherState()` 导出；原实现改名 `gatherStateUncached()` | 每次调用要把 86 条 patch 的宿主文件全读一遍：热态 844 ms，面板打开时 `/dsh-purge/status` 单次 171~248 ms、并发 10 次 1822 ms。缓存后热态 0 ms |
+| `lib/index.js` | apply / revert 两处 HTTP 路由与 `purge_apply` / `purge_revert` 两个工具，写前 `invalidateGatherState()` + `gatherState({fresh:true})` | 写操作必须看到写前的真实状态，否则会拿 1.5 s 内的旧快照算"已应用"而跳过该打的补丁 |
+
+## 2026-11-19 第三波修复：接口语义统一 + 命令/工具兜底
 
 | 文件 | 改动 | 为什么 |
 | --- | --- | --- |
