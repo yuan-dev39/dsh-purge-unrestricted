@@ -1,6 +1,6 @@
 {
   "name": "dsh-purge",
-  "version": "1.1.90",
+  "version": "1.1.91",
   "description": "DeepSeek Harness 破甲：让所有模型都能破甲，不同模型可换不同提示词；默认提示词面向国模「小码酱」。Jailbreak for every model — swap prompts per model. 求 Star 收藏 ⭐ 如要二开，请查看署名要求部分",
   "author": "dsh-purge maintainers",
   "type": "module",
@@ -107,7 +107,10 @@
     "changes": [
       "lib/net-scope.js: region/cheat gate neutralized",
       "lib/index.js: installRegionGate() no longer called",
-      "skills/redteam: 23 local skill docs bundled"
+      "skills/redteam: 23 local skill docs bundled",
+      "lib/backups.js: backup inventory (host *.dshpurge.bak, profiles *.bak-<ts>, shim originals, lib.bak-restrict-* snapshots) with 10s TTL cache",
+      "client.js: sidebar footer backup manager (portal dialog, Escape capture, scroll lock, unmount guard, directory grouping)",
+      "harness: patch #82 DSH_PROFILE fallback landed; MANIFEST rebuilt 62/62"
     ]
   }
 }

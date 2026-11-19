@@ -75,6 +75,36 @@ powershell -ExecutionPolicy Bypass -File .\install-modified.ps1 -Revert
 
 ---
 
+## 版本 1.1.91 增量（2026-11-18）
+
+相对上一版 harness 快照，本次新增：
+
+### 1. 补丁 #82 落地（原本 drifted）
+
+`lib\main.js` 顶部新增 `DSH_PROFILE` 兜底：
+
+```js
+// [dsh-purge-82] 双击 exe 从 explorer 继承 env 时常缺 DSH_PROFILE
+// → host 子进程 "cannot determine the boot profile" → cordis 不加载
+// → dsh-purge 插件没 activate → __dshPurgeHungPrompt 空 → inject 全断。兜底默认 desktop。
+if (typeof process !== "undefined" && process.env && !process.env.DSH_PROFILE) process.env.DSH_PROFILE = "desktop";
+```
+
+上一版 RELEASE-NOTES 里写的是「2 个 drifted（#45、#82，不影响使用）」。实际 #82 有影响：从资源管理器双击启动时环境变量缺失会让整个插件链哑掉。本版补上。
+
+### 2. MANIFEST 重算
+
+62 条目逐文件 sha256 重新生成，当前与安装目录逐字节一致（62/62）。
+
+### 3. 校验
+
+```
+harness/patch/lib/main.js   215,455 B
+sha256  3013DEC998B02C4B7B420A755AD5C9CB1AAB07428370CCA8BA36910CEEBDE146
+```
+
+---
+
 ## 改了什么
 
 ### 1. 官方自动更新关闭

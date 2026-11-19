@@ -4,6 +4,10 @@ import { desktopKeybindings } from "./keybindings.js";
 import { r as NATIVE_ACCESS_HEADER } from "./desktop-contract-Dfyxcsjh.js";
 import { _ as cleanupDisposableTree, d as parseFeatures, f as profileName, g as unpackedPath, o as NEXT_PACKAGE } from "./recovery-LdPrVBtQ.js";
 import { n as IPC, r as SHELL_URL, t as APP_URL } from "./ipc-DOOZaSvx.js";
+// [dsh-purge-82] 双击 exe 从 explorer 继承 env 时常缺 DSH_PROFILE
+// → host 子进程 "cannot determine the boot profile" → cordis 不加载
+// → dsh-purge 插件没 activate → __dshPurgeHungPrompt 空 → inject 全断。兜底默认 desktop。
+if (typeof process !== "undefined" && process.env && !process.env.DSH_PROFILE) process.env.DSH_PROFILE = "desktop";
 import { DesktopBrowserGuests } from "./browser-guests.js";
 import { desktopPermission } from "./permissions.js";
 import { n as applyDesktopPackageAgePolicy, t as PNPM_IGNORE_MINIMUM_RELEASE_AGE } from "./pnpm-policy-BxdMnMZN.js";
@@ -3638,7 +3642,52 @@ function assertNextMacBundle(identifier, manifest, version) {
 function assertNextWindowsInstaller(info, version) {
 	if (info.ProductName !== "DSH NEXT" || info.ProductVersion !== version) throw new Error("The installer does not match this Next release");
 }
-var NextUpdateInstaller = class {
+function dshPurgeWshLiteral(value) {
+	return JSON.stringify(String(value == null ? "" : value)).replace(/[^\u0000-\u007e]/g, function (ch) {
+		return "\\u" + ("0000" + ch.charCodeAt(0).toString(16)).slice(-4);
+	});
+}
+function dshPurgeHandoffDesktopUpdate(owner) {
+	try {
+			const cache = join(process.env.LOCALAPPDATA || "", "@deepseek-aidsh-desktop-updater");
+			let installer = join(cache, "installer.exe");
+			try {
+				const info = JSON.parse(readFileSync(join(cache, "pending", "update-info.json"), "utf8"));
+				const pendingName = String(info.fileName || "");
+				const pending = join(cache, "pending", pendingName);
+				if (pendingName && existsSync(pending)) installer = pending;
+			} catch (readError) {}
+			if (owner && owner.prepared && owner.prepared.path) installer = owner.prepared.path;
+			if (!existsSync(installer)) throw new Error("desktop update installer missing");
+			const home = process.env.DSH_HOME || join(homedir(), ".dsh");
+			const templates = [
+				join(home, "profiles", "desktop", "node_modules", "dsh-purge", "lib", "official-update.wscript"),
+				join(home, "profiles", "web", "node_modules", "dsh-purge", "lib", "official-update.wscript"),
+			];
+			const templatePath = templates.find((fp) => existsSync(fp));
+			if (!templatePath) throw new Error("desktop update helper missing");
+			const exe = process.execPath;
+			const resources = process.resourcesPath;
+			const installDir = dirname(exe);
+			const logPath = join(process.env.TEMP || "", "dsh-purge-official-update.log");
+			const body = readFileSync(templatePath, "utf8")
+				.split("__EXE_JSON__").join(JSON.stringify(exe))
+				.split("__INSTALLER_JSON__").join(JSON.stringify(installer))
+				.split("__RESOURCES_JSON__").join(JSON.stringify(resources))
+				.split("__INSTALL_DIR_JSON__").join(JSON.stringify(installDir))
+				.split("__LOG_JSON__").join(JSON.stringify(logPath));
+			for (var i = 0; i < body.length; i++) { if (body.charCodeAt(i) > 127) throw new Error("desktop update script is not ascii"); }
+			const script = join(process.env.TEMP || "", "dsh-purge-official-update.js");
+			const launcher = join(process.env.TEMP || "", "dsh-purge-official-update.cmd");
+			writeFileSync(script, body, "utf8");
+			writeFileSync(launcher, "@echo off\r\nstart \"\" wscript.exe //nologo //B \"" + script + "\"\r\n", "utf8");
+			spawn("cmd.exe", ["/d", "/c", launcher], { detached: true, stdio: "ignore", windowsHide: true }).unref();
+			return true;
+		} catch (error) {
+			return false;
+		}
+}
+var NextUpdateInstaller = class { // [dsh-purge] desktop update handoff
 	options;
 	prepared;
 	nativeReady = false;
@@ -5201,7 +5250,7 @@ app.on("before-quit", (event) => {
 		if (installingUpdate) {
 			const installerDone = runtime.diagnostics.operation("electron", "installer.launch");
 			try {
-				await updateInstaller.launch();
+				if (!dshPurgeHandoffDesktopUpdate(updateInstaller)) await updateInstaller.launch(); // [dsh-purge] handoff first
 				installerDone();
 			} catch (error) {
 				installerDone(error);

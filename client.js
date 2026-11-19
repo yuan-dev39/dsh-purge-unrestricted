@@ -483,6 +483,30 @@ window.__ModuleLoader__.load({ id: "dsh-purge", factory: (require) => {
 			"continue.ready": "继续（还可 {left} 次）",
 			"continue.limit": "已达继续上限",
 			"continue.fail": "继续失败: {error}",
+			"bk.trigger": "历史备份",
+			"bk.title": "历史备份目录管理",
+			"bk.hint": "dsh-purge 打补丁前留下的原件副本。删掉之后无法还原，确认不再需要再删。",
+			"bk.loading": "读取中…",
+			"bk.empty": "没有备份文件",
+			"bk.readFail": "读取失败: {error}",
+			"bk.total": "共 {count} 项 · {size}",
+			"bk.delete": "删除",
+			"bk.deleteAll": "全部删除",
+			"bk.refresh": "刷新",
+			"bk.close": "关闭",
+			"bk.confirmTitle": "删除选中备份？",
+			"bk.confirmBody": "将永久删除 {count} 项（{size}），不进入回收站。",
+			"bk.confirmOk": "确认删除",
+			"bk.cancel": "取消",
+			"bk.deleting": "删除中…",
+			"bk.deleted": "已删除 {count} 项",
+			"bk.deleteFail": "删除失败: {error}",
+			"bk.selectAll": "全选",
+			"bk.group.host": "宿主原件",
+			"bk.group.shim": "shim 原件",
+			"bk.group.snapshot": "lib 快照目录",
+			"bk.group.profile": "profile 备份",
+			"bk.rootDir": "(根)",
 		};
 
 		const en = {
@@ -844,6 +868,30 @@ window.__ModuleLoader__.load({ id: "dsh-purge", factory: (require) => {
 			"continue.ready": "Continue ({left} left)",
 			"continue.limit": "Continue limit reached",
 			"continue.fail": "Continue failed: {error}",
+			"bk.trigger": "Backups",
+			"bk.title": "Backup directory manager",
+			"bk.hint": "Original copies dsh-purge kept before patching. Deleting one is permanent.",
+			"bk.loading": "Loading…",
+			"bk.empty": "No backup files",
+			"bk.readFail": "Read failed: {error}",
+			"bk.total": "{count} items · {size}",
+			"bk.delete": "Delete",
+			"bk.deleteAll": "Delete all",
+			"bk.refresh": "Refresh",
+			"bk.close": "Close",
+			"bk.confirmTitle": "Delete the selected backups?",
+			"bk.confirmBody": "{count} items ({size}) will be permanently removed.",
+			"bk.confirmOk": "Delete",
+			"bk.cancel": "Cancel",
+			"bk.deleting": "Deleting…",
+			"bk.deleted": "Deleted {count}",
+			"bk.deleteFail": "Delete failed: {error}",
+			"bk.selectAll": "Select all",
+			"bk.group.host": "Host originals",
+			"bk.group.shim": "Shim originals",
+			"bk.group.snapshot": "lib snapshots",
+			"bk.group.profile": "profile backups",
+			"bk.rootDir": "(root)",
 		};
 
 		const PURGE_CSS = `
@@ -1161,6 +1209,75 @@ body[data-ds-dark-theme] .rt-btn-primary:hover:not(:disabled),
 body[data-ds-dark-theme] .dshp-dock-body .rt-btn-primary,
 .dshp-dock[data-theme="dusk"] .dshp-dock-body .rt-btn-primary{background:#3d8f68!important;border-color:#3d8f68!important;color:#fff!important;-webkit-text-fill-color:#fff!important;backdrop-filter:none}
 body[data-ds-dark-theme] .rt-rep-step-no,.dshp-dock[data-theme="dusk"] .rt-rep-step-no{background:#3d8f68;color:#fff}
+/* ── 历史备份目录管理 ─────────────────────────────────────────────────
+   触发器与宿主侧边栏底部同区按钮（Cordis 插件入口 / 设置行）对齐：
+   42px 高、12px 圆角、hover 用 --dsw-alias-interactive-bg-hover，
+   收起成 56px 轨道时变 36px 圆形。 */
+.dshp-bk-anchor{flex:1 1 0;align-self:center;display:flex;align-items:center;justify-content:flex-start;min-width:0;height:42px;line-height:0;margin:8px 0 0;position:relative}
+.dshp-bk-anchor-rail{flex:none;width:36px;min-width:36px;height:36px;margin:0;justify-content:center}
+.dshp-bk-trigger{appearance:none;box-sizing:border-box;display:flex;align-items:center;justify-content:flex-start;gap:8px;width:calc(100% + 4px);height:42px;min-width:0;margin:0 -2px;padding:0 10px 0 8px;border:0;border-radius:12px;background:0 0;color:var(--dsw-alias-label-primary,currentColor);cursor:pointer;font-family:inherit;font-size:14px;line-height:20px;overflow:hidden;text-align:left;vertical-align:middle}
+.dshp-bk-ico{flex:none}
+.dshp-bk-trigger:hover,.dshp-bk-trigger[aria-expanded="true"]{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12))}
+.dshp-bk-trigger:focus-visible{outline:2px solid var(--dsw-alias-label-primary,currentColor);outline-offset:-2px}
+.dshp-bk-trigger svg{flex:none;display:block;opacity:.9;align-self:center}
+.dshp-bk-label{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center;line-height:20px}
+.dshp-bk-count-badge{flex:none;margin-left:auto;align-self:center;vertical-align:middle;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:color-mix(in srgb,var(--dsw-alias-label-primary,currentColor) 14%,transparent);color:inherit;font-size:11px;font-weight:600;line-height:1;text-align:center;opacity:.8}
+.dshp-bk-anchor-rail .dshp-bk-trigger{width:36px;height:36px;margin:0;padding:0;border-radius:50%;justify-content:center;gap:0}
+.dshp-bk-anchor-rail .dshp-bk-count-badge{margin-left:0;position:absolute;top:-2px;right:-2px;min-width:15px;height:15px;font-size:10px;padding:0 4px;background:var(--dsw-alias-label-primary,currentColor);color:var(--dsw-specific-menu,#fff);opacity:1}
+
+.dshp-bk-bg{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:flex-start;justify-content:center;padding:28px 24px;background:rgba(0,0,0,.55);overflow-y:auto;overscroll-behavior:contain}
+.dshp-bk-panel{position:relative;box-sizing:border-box;display:flex;flex-direction:column;width:min(680px,100%);height:auto;max-height:calc(100vh - 56px);min-height:0;margin:auto;padding:16px;border-radius:14px;background:#fffcf7;color:#16140f;border:1px solid rgba(0,0,0,.1);box-shadow:0 18px 48px rgba(0,0,0,.34);font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;isolation:isolate;overflow:hidden}
+body[data-ds-dark-theme] .dshp-bk-panel{background:#26261f;color:#f0ece4;border-color:rgba(255,255,255,.12)}
+.dshp-bk-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.dshp-bk-head b{flex:1;min-width:0;font-size:16px;line-height:24px;font-weight:600}
+.dshp-bk-x{appearance:none;flex:none;width:28px;height:28px;border:0;border-radius:8px;background:0 0;color:inherit;cursor:pointer;font-size:18px;line-height:1;opacity:.72}
+.dshp-bk-x:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.14));opacity:1}
+.dshp-bk-hint{margin:0 0 10px;font-size:12px;line-height:18px;color:var(--dsw-alias-label-tertiary,#8b867c)}
+.dshp-bk-bar{display:flex;align-items:center;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--dsw-alias-border-l1,rgba(127,127,127,.18))}
+.dshp-bk-count{flex:1;min-width:0;font-size:12px;color:var(--dsw-alias-label-secondary,#6d6960);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dshp-bk-mini{appearance:none;flex:none;height:26px;padding:0 10px;border:1px solid var(--dsw-alias-border-l1,rgba(127,127,127,.24));border-radius:8px;background:0 0;color:inherit;cursor:pointer;font-family:inherit;font-size:12px}
+.dshp-bk-mini:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12))}
+.dshp-bk-mini:disabled{opacity:.4;cursor:default}
+.dshp-bk-body{flex:1 1 auto;min-height:80px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;margin:8px -4px 0;padding:0 4px;scrollbar-width:thin}
+.dshp-bk-body::-webkit-scrollbar{width:8px}
+.dshp-bk-body::-webkit-scrollbar-thumb{background:rgba(127,127,127,.38);border-radius:4px}
+.dshp-bk-body::-webkit-scrollbar-track{background:0 0}
+.dshp-bk-head,.dshp-bk-hint,.dshp-bk-bar,.dshp-bk-ops,.dshp-bk-error,.dshp-bk-note{flex:none}
+.dshp-bk-empty{margin:24px 0;text-align:center;font-size:13px;color:var(--dsw-alias-label-tertiary,#8b867c)}
+.dshp-bk-group{margin:0 0 12px}
+.dshp-bk-gtitle{margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:.02em;color:var(--dsw-alias-label-tertiary,#8b867c);text-transform:none}
+.dshp-bk-gtitle{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.dshp-bk-gstat{font-weight:400;font-size:11px;color:var(--dsw-alias-label-tertiary,#8b867c);white-space:nowrap}
+.dshp-bk-dir{margin:0 0 2px}
+.dshp-bk-dirhead{appearance:none;display:flex;align-items:center;gap:6px;width:100%;height:26px;padding:0 6px;border:0;border-radius:7px;background:0 0;color:var(--dsw-alias-label-secondary,#6d6960);cursor:pointer;font-family:inherit;font-size:11.5px;line-height:26px;text-align:left}
+.dshp-bk-dirhead:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.1))}
+.dshp-bk-caret{flex:none;width:12px;font-size:10px;opacity:.7;line-height:1}
+.dshp-bk-dirpath{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;direction:rtl;text-align:left;font-family:ui-monospace,"Cascadia Mono",monospace}
+.dshp-bk-dirstat{flex:none;font-variant-numeric:tabular-nums;opacity:.8}
+.dshp-bk-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.dshp-bk-row{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:9px}
+.dshp-bk-row:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.1))}
+.dshp-bk-row[data-checked="1"]{background:color-mix(in srgb,var(--dsw-alias-label-primary,currentColor) 8%,transparent)}
+.dshp-bk-check{flex:none;width:14px;height:14px;margin:0;accent-color:var(--dsw-alias-label-primary,#3a3a3a);cursor:pointer}
+.dshp-bk-meta{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dshp-bk-name{font-size:13px;line-height:18px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dshp-bk-sub{font-size:11px;line-height:16px;color:var(--dsw-alias-label-tertiary,#8b867c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dshp-bk-del{appearance:none;flex:none;height:24px;padding:0 9px;border:1px solid color-mix(in srgb,#d9534f 40%,transparent);border-radius:7px;background:0 0;color:#d9534f;cursor:pointer;font-family:inherit;font-size:12px}
+.dshp-bk-del:hover:not(:disabled){background:color-mix(in srgb,#d9534f 14%,transparent)}
+.dshp-bk-del:disabled{opacity:.4;cursor:default}
+.dshp-bk-error{margin-top:8px;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#d9534f 14%,transparent);color:#c0392b;font-size:12px;line-height:17px;word-break:break-all}
+.dshp-bk-note{margin-top:8px;padding:8px 10px;border-radius:8px;background:color-mix(in srgb,#2e9e5b 14%,transparent);color:#1f7a45;font-size:12px;line-height:17px}
+.dshp-bk-ops{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.dshp-bk-btn{appearance:none;height:32px;padding:0 14px;border:1px solid var(--dsw-alias-border-l1,rgba(127,127,127,.24));border-radius:9px;background:0 0;color:inherit;cursor:pointer;font-family:inherit;font-size:13px}
+.dshp-bk-btn:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12))}
+.dshp-bk-btn:disabled{opacity:.4;cursor:default}
+.dshp-bk-danger{border-color:color-mix(in srgb,#d9534f 45%,transparent);color:#d9534f}
+.dshp-bk-danger:hover:not(:disabled){background:color-mix(in srgb,#d9534f 14%,transparent)}
+.dshp-bk-confirm-bg{z-index:2147483001}
+.dshp-bk-confirm{box-sizing:border-box;width:min(400px,100%);padding:16px;border-radius:12px;background:#fffcf7;color:#16140f;border:1px solid rgba(0,0,0,.1);box-shadow:0 18px 48px rgba(0,0,0,.36);isolation:isolate}
+body[data-ds-dark-theme] .dshp-bk-confirm{background:#26261f;color:#f0ece4;border-color:rgba(255,255,255,.12)}
+.dshp-bk-confirm h4{margin:0 0 8px;font-size:16px;font-weight:600}
+.dshp-bk-confirm p{margin:0;font-size:13px;line-height:20px}
 `;
 
 		function formatSize(bytes) {
@@ -2960,7 +3077,7 @@ body[data-ds-dark-theme] .rt-rep-step-no,.dshp-dock[data-theme="dusk"] .rt-rep-s
 			);
 		}
 
-		const REWIND_CSS = `
+const REWIND_CSS = `
 .dshp-rewind-wrap{position:relative;display:inline-flex}
 .dshp-rewind{appearance:none;display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 8px;border:0;border-radius:8px;background:transparent;color:var(--dsw-alias-label-secondary,currentColor);font:12px/1 var(--ds-font-sans,system-ui,sans-serif);cursor:pointer}
 .dshp-rewind:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12));color:var(--dsw-alias-label-primary,currentColor)}
@@ -8925,6 +9042,341 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 		   Android WebView 切后台返回时，宿主 composer 的 React 子树只要在提交阶段抛一次，
 		   整块输入框就会被卸载；把按钮挪到 body 上的 fixed 宿主 + createPortal，
 		   渲染树完全离开 composer，位置按 .standardControls 的矩形对齐。 */
+
+		/* 历史备份目录管理：宿主侧边栏底部 sidebar.footer.action 里的一个条目。
+		   .bJOniG_footerActions 是横向 flex 行，与「设置 / 已登录 DeepSeek」那行同宽同高，
+		   所以按钮样式直接照搬同区按钮：42px 高、12px 圆角、hover 底色走 --dsw-alias-interactive-bg-hover，
+		   收起成 56px 轨道时缩成 36px 圆形。 */
+		const BK_SLOT = "sidebar.footer.action";
+
+		function bkBytes(n) {
+			const v = Number(n) || 0;
+			if (v < 1024) return v + " B";
+			if (v < 1024 * 1024) return (v / 1024).toFixed(1) + " KB";
+			if (v < 1024 * 1024 * 1024) return (v / 1024 / 1024).toFixed(1) + " MB";
+			return (v / 1024 / 1024 / 1024).toFixed(2) + " GB";
+		}
+
+		function bkFill(text, vars) {
+			return String(text).replace(/\{(\w+)\}/g, (m, k) => (vars && vars[k] !== undefined ? String(vars[k]) : m));
+		}
+
+		function BackupIcon(size) {
+			return h("svg", {
+				width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+				stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round",
+				"aria-hidden": "true",
+			},
+				h("path", { d: "M4 7.5A1.5 1.5 0 0 1 5.5 6h4l1.6 1.8H18.5A1.5 1.5 0 0 1 20 9.3v8.2a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z" }),
+				h("path", { d: "M9.5 14.2h5" }),
+			);
+		}
+
+		function BackupRow(props) {
+			const t = props.t;
+			const row = props.row;
+			const checked = props.checked;
+			return h("li", { className: "dshp-bk-row", "data-checked": checked ? "1" : "0" },
+				h("input", {
+					type: "checkbox",
+					className: "dshp-bk-check",
+					checked: !!checked,
+					"aria-label": row.name,
+					onChange: () => props.onToggle(row.id),
+				}),
+				h("div", { className: "dshp-bk-meta" },
+					h("b", { className: "dshp-bk-name", title: row.path }, row.name),
+					h("span", { className: "dshp-bk-sub" },
+						bkBytes(row.size),
+						row.kind === "dir" && row.count !== undefined ? " · " + row.count + " 个文件" : "",
+						" · " + String(row.mtime_text || "").replace("T", " ").slice(0, 19),
+					),
+				),
+				h("button", {
+					type: "button",
+					className: "dshp-bk-del",
+					title: row.path,
+					disabled: !!props.busy,
+					onClick: () => props.onDelete([row.id]),
+				}, t("bk.delete")),
+			);
+		}
+
+		function BackupManagerDialog(props) {
+			const t = props.t;
+			const [rows, setRows] = useState([]);
+			const [groups, setGroups] = useState([]);
+			const [dirs, setDirs] = useState([]);
+			const [expanded, setExpanded] = useState({});
+			const [picked, setPicked] = useState(() => new Set());
+			const [busy, setBusy] = useState(false);
+			const [error, setError] = useState("");
+			const [note, setNote] = useState("");
+			const [confirm, setConfirm] = useState(null);
+			// 面板会被快速关开，异步回来的数据不能落到已卸载组件上；序号只认最后一次请求。
+			const aliveRef = useRef(true);
+			const seqRef = useRef(0);
+			useEffect(() => {
+				aliveRef.current = true;
+				return () => { aliveRef.current = false; };
+			}, []);
+
+			const load = useCallback(async () => {
+				setError("");
+				const seq = ++seqRef.current;
+				try {
+					const data = await apiJson("/dsh-purge/backups?force=1");
+					if (!aliveRef.current || seq !== seqRef.current) return;
+					setRows(Array.isArray(data && data.rows) ? data.rows : []);
+					setGroups(Array.isArray(data && data.groups) ? data.groups : []);
+					const nextDirs = Array.isArray(data && data.dirs) ? data.dirs : [];
+					setDirs(nextDirs);
+					setExpanded((prev) => {
+						if (Object.keys(prev).length) return prev;
+						const seed = {};
+						for (const d of nextDirs.slice(0, 3)) seed[d.key] = true;
+						return seed;
+					});
+					setPicked((prev) => {
+						const alive = new Set((data && data.rows ? data.rows : []).map((r) => r.id));
+						const next = new Set();
+						for (const id of prev) if (alive.has(id)) next.add(id);
+						return next;
+					});
+				} catch (e) {
+					if (!aliveRef.current || seq !== seqRef.current) return;
+					setError(bkFill(t("bk.readFail"), { error: String((e && e.message) || e) }));
+				}
+			}, [t]);
+
+			useEffect(() => {
+				load();
+			}, [load]);
+
+			const totalSize = rows.reduce((n, r) => n + (Number(r.size) || 0), 0);
+			const pickedRows = rows.filter((r) => picked.has(r.id));
+			const pickedSize = pickedRows.reduce((n, r) => n + (Number(r.size) || 0), 0);
+
+			const toggle = useCallback((id) => {
+				setPicked((prev) => {
+					const next = new Set(prev);
+					if (next.has(id)) next.delete(id); else next.add(id);
+					return next;
+				});
+			}, []);
+
+			const toggleAll = useCallback(() => {
+				setPicked((prev) => (prev.size === rows.length ? new Set() : new Set(rows.map((r) => r.id))));
+			}, [rows]);
+
+			const doDelete = useCallback(async (ids) => {
+				if (!ids.length) return;
+				setBusy(true);
+				setError("");
+				setNote("");
+				try {
+					const data = await apiJson("/dsh-purge/backups", {
+						method: "POST",
+						headers: { "content-type": "application/json" },
+						body: JSON.stringify({ op: "delete", ids }),
+					});
+					setRows(Array.isArray(data && data.rows) ? data.rows : []);
+					setGroups(Array.isArray(data && data.groups) ? data.groups : []);
+					setDirs(Array.isArray(data && data.dirs) ? data.dirs : []);
+					setPicked(new Set());
+					const removed = Array.isArray(data && data.removed) ? data.removed.length : 0;
+					const failed = Array.isArray(data && data.failed) ? data.failed : [];
+					const skipped = Array.isArray(data && data.skipped) ? data.skipped : [];
+					if (failed.length || skipped.length) {
+						const parts = [];
+						if (failed.length) parts.push(failed.map((f) => f.path + "（" + (f.reason || "失败") + "）").join("；"));
+						if (skipped.length) parts.push(skipped.map((s) => (s.path || s.id) + "（" + (s.reason || "跳过") + "）").join("；"));
+						setError(parts.join("；"));
+					}
+					if (removed) setNote(bkFill(t("bk.deleted"), { count: removed }));
+				} catch (e) {
+					setError(bkFill(t("bk.deleteFail"), { error: String((e && e.message) || e) }));
+				} finally {
+					setBusy(false);
+					setConfirm(null);
+				}
+			}, [t]);
+
+			useEffect(() => {
+				const onKey = (ev) => {
+					if (ev.key !== "Escape") return;
+					// 宿主也在 document 上监听 Escape（关侧边栏面板 / 关菜单）。
+					// 面板开着时这一下属于面板，必须吞掉，否则一次 Esc 会连带关掉宿主的东西。
+					ev.stopPropagation();
+					ev.preventDefault();
+					if (confirm) setConfirm(null);
+					else props.onClose();
+				};
+				document.addEventListener("keydown", onKey, true);
+				// 面板打开时锁住底层滚动（body 是 portal 的宿主，背景不锁会跟着滚）
+				const prevOverflow = document.body.style.overflow;
+				document.body.style.overflow = "hidden";
+				return () => {
+					document.removeEventListener("keydown", onKey, true);
+					document.body.style.overflow = prevOverflow;
+				};
+			}, [confirm, props.onClose]);
+
+			// 60 条平铺太长：按「相对目录」折叠，默认展开前 3 组。
+			const body = groups.length === 0
+				? h("p", { className: "dshp-bk-empty" }, error || t("bk.empty"))
+				: groups.map((g) => {
+					const bin = dirs.filter((d) => d.label === g.label);
+					return h("section", { key: g.id, className: "dshp-bk-group" },
+						h("h4", { className: "dshp-bk-gtitle" },
+							h("span", null, t("bk.group." + g.id) || g.label),
+							h("span", { className: "dshp-bk-gstat" }, bin.length + " 目录 · " + g.rows.length + " 项"),
+						),
+						bin.map((d, di) => {
+							const open = !!expanded[d.key];
+							return h("div", { key: d.key, className: "dshp-bk-dir" },
+								h("button", {
+									type: "button",
+									className: "dshp-bk-dirhead",
+									"aria-expanded": open,
+									title: d.rel || "(根)",
+									onClick: () => setExpanded((prev) => ({ ...prev, [d.key]: !prev[d.key] })),
+								},
+									h("span", { className: "dshp-bk-caret", "data-open": open ? "1" : "0" }, open ? "▾" : "▸"),
+									h("span", { className: "dshp-bk-dirpath" }, d.rel || t("bk.rootDir")),
+									h("span", { className: "dshp-bk-dirstat" }, d.count + " · " + bkBytes(d.size)),
+								),
+								open ? h("ul", { className: "dshp-bk-list" },
+									d.rows.map((row) => h(BackupRow, {
+										key: row.id, t, row, busy,
+										checked: picked.has(row.id),
+										onToggle: toggle,
+										onDelete: (ids) => setConfirm({ ids, count: ids.length, size: row.size }),
+									})),
+								) : null,
+							);
+						}),
+					);
+				});
+
+			return h("div", { className: "dshp-bk-bg", role: "presentation", onMouseDown: (ev) => { if (ev.target === ev.currentTarget) props.onClose(); } },
+				h("div", {
+					className: "dshp-bk-panel", role: "dialog", "aria-modal": "true", "aria-label": t("bk.title"),
+					"data-testid": "dsh-purge-backup-dialog",
+				},
+					h("header", { className: "dshp-bk-head" },
+						h("b", null, t("bk.title")),
+						h("button", { type: "button", className: "dshp-bk-x", "aria-label": t("bk.close"), onClick: props.onClose }, "×"),
+					),
+					h("p", { className: "dshp-bk-hint" }, t("bk.hint")),
+					h("div", { className: "dshp-bk-bar" },
+						h("button", {
+							type: "button", className: "dshp-bk-mini", disabled: busy || rows.length === 0,
+							onClick: toggleAll,
+						}, t("bk.selectAll")),
+						h("span", { className: "dshp-bk-count" }, bkFill(t("bk.total"), { count: rows.length, size: bkBytes(totalSize) })),
+						h("button", { type: "button", className: "dshp-bk-mini", disabled: busy, onClick: load }, t("bk.refresh")),
+					),
+					h("div", { className: "dshp-bk-body" }, body),
+					error ? h("div", { className: "dshp-bk-error", role: "alert" }, error) : null,
+					note ? h("div", { className: "dshp-bk-note", role: "status" }, note) : null,
+					h("footer", { className: "dshp-bk-ops" },
+						h("button", {
+							type: "button", className: "dshp-bk-btn", disabled: busy,
+							onClick: () => { setConfirm(null); props.onClose(); },
+						}, t("bk.close")),
+						h("button", {
+							type: "button", className: "dshp-bk-btn dshp-bk-danger",
+							disabled: busy || picked.size === 0,
+							onClick: () => setConfirm({ ids: Array.from(picked), count: picked.size, size: pickedSize }),
+						}, busy ? t("bk.deleting") : t("bk.delete") + (picked.size ? " (" + picked.size + ")" : "")),
+					),
+					confirm ? h("div", { className: "dshp-bk-bg dshp-bk-confirm-bg" },
+						h("div", { className: "dshp-bk-confirm", role: "alertdialog", "aria-modal": "true" },
+							h("h4", null, t("bk.confirmTitle")),
+							h("p", null, bkFill(t("bk.confirmBody"), { count: confirm.count, size: bkBytes(confirm.size) })),
+							h("div", { className: "dshp-bk-ops" },
+								h("button", { type: "button", className: "dshp-bk-btn", disabled: busy, onClick: () => setConfirm(null) }, t("bk.cancel")),
+								h("button", {
+									type: "button", className: "dshp-bk-btn dshp-bk-danger", disabled: busy,
+									onClick: () => doDelete(confirm.ids),
+								}, busy ? t("bk.deleting") : t("bk.confirmOk")),
+							),
+						),
+					) : null,
+				),
+			);
+		}
+
+		/* 侧边栏底部那一条：跟「设置 / 已登录 DeepSeek」同款的一行按钮。 */
+		function BackupFooterAction(props) {
+			const t = useT();
+			const wide = props.wide !== false;
+			const [open, setOpen] = useState(false);
+			const [count, setCount] = useState(0);
+			useEffect(() => {
+				let cancelled = false;
+				// 后端整盘递归约 270ms，5 分钟一次即可；页面隐藏时完全停掉。
+				const read = () => {
+					if (typeof document !== "undefined" && document.hidden) return;
+					apiJson("/dsh-purge/backups")
+						.then((data) => { if (!cancelled) setCount(Number(data && data.total_count) || 0); })
+						.catch(() => { /* 读不到就不显示计数，按钮本身可用 */ });
+				};
+				read();
+				const iv = setInterval(read, 300000);
+				return () => { cancelled = true; clearInterval(iv); };
+			}, [open]);
+			return h(react.Fragment, null,
+				h("div", { className: "dshp-bk-anchor" + (wide ? "" : " dshp-bk-anchor-rail") },
+					h("button", {
+						type: "button",
+						className: "dshp-bk-trigger",
+						"data-testid": "dsh-purge-backup-trigger",
+						"data-wide": wide ? "1" : "0",
+						title: t("bk.title"),
+						"aria-haspopup": "dialog",
+						"aria-expanded": open,
+						onClick: () => setOpen(true),
+					},
+						h("span", { className: "dshp-bk-ico", style: { display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "none", width: "16px", height: "16px", lineHeight: "1" } }, BackupIcon(wide ? 16 : 18)),
+						wide ? h("span", { className: "dshp-bk-label", style: { display: "inline-flex", alignItems: "center", flex: "1 1 auto", minWidth: "0", height: "20px", lineHeight: "20px" } }, t("bk.trigger")) : null,
+						wide && count > 0 ? h("span", { className: "dshp-bk-count-badge", style: { display: "inline-flex", alignItems: "center", justifyContent: "center", flex: "none", alignSelf: "center", boxSizing: "border-box", minWidth: "18px", height: "18px", lineHeight: "18px", padding: "0 5px", fontVariantNumeric: "tabular-nums" } }, String(count)) : null,
+					),
+				),
+				open ? h(BackupPortal, null, h(BackupManagerDialog, { t, onClose: () => setOpen(false) })) : null,
+			);
+		}
+
+		/* slot owner 传的是 { wide }；这里只做默认值兜底，
+		   收起成 56px 轨道时 wide=false。 */
+		function BackupFooterSlot(props) {
+			// owner 传 { wide: boolean }；只认显式 true，其余一律按收起态处理。
+			const wide = !!(props && props.wide === true);
+			return h(BackupFooterAction, { wide });
+		}
+
+		/* 弹窗必须挂到 document.body：侧边栏底部这个区域在宿主的层叠上下文里，
+		   父级一旦有 transform/filter/overflow，position:fixed 会退化成相对容器定位，
+		   弹窗就被裁掉一半、也滚不动。 */
+		function BackupPortal(props) {
+			const [host, setHost] = useState(null);
+			useEffect(() => {
+				if (typeof document === "undefined") return undefined;
+				const el = document.createElement("div");
+				el.setAttribute("data-dsh-purge-backup-portal", "1");
+				document.body.appendChild(el);
+				setHost(el);
+				return () => { try { el.remove(); } catch { /* ignore */ } };
+			}, []);
+			if (!host) return null;
+			try {
+				const rd = require("react-dom");
+				if (rd && typeof rd.createPortal === "function") return rd.createPortal(props.children, host);
+			} catch { /* 宿主可能没暴露 react-dom */ }
+			return null;
+		}
+
 		const REWIND_HOST_ATTR = "data-dsh-purge-rewind-host";
 		const REWIND_RESERVE_PX = 64;
 
@@ -9175,6 +9627,17 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 				id: "dsh-purge-dock",
 				order: 50,
 			}, () => h(react.Fragment, null, h(WelcomeNotice), h(PurgeLauncher), h(PurgeDock), h(HeroNewSessionMount), h(TabRowPurgeMount), h(EnvAdaptSendGate), h(RewindDockMount))));
+			// 侧边栏底部「历史备份」入口：与设置行同宽同高，排在 Cordis 插件入口之后。
+			try {
+				ctx.slots.inject("sidebar.footer.action", () => ctx.slots.register({
+					name: "sidebar.footer.action",
+					id: "dsh-purge-backups",
+					order: 40,
+					label: () => translate("bk.trigger"),
+				}, BackupFooterSlot));
+			} catch (e) {
+				try { console.warn("[dsh-purge] sidebar.footer.action skipped:", e); } catch { /* ignore */ }
+			}
 			try {
 				if (typeof ctx.inject === "function") {
 					ctx.inject(["sessions", "uiWorkspace", "workspaces", "conversation"], (host) => installRewindUi(host));

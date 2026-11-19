@@ -1,3 +1,51 @@
+# 1.1.91
+
+## 中文
+
+- 版本 **1.1.91**。
+- **新增：侧边栏「历史备份目录管理」**。位置在侧边栏底部、与设置行同宽同高，排在 Cordis 插件入口之后。徽标实时显示备份文件数，点开是完整的备份清单。
+  - 覆盖四类备份来源：宿主树里的 `*.dshpurge.bak`（59 项）、`$DSH_HOME/profiles` 下宿主 `sanitizeProfile()` 写的 `*.bak-<时间戳>` 与历史手工快照（15 项）、`$DSH_HOME/dsh-purge/shim-backups` 下的 shim 原件、插件根的 `lib.bak-restrict-*` 整目录快照。
+  - 按「相对安装根的目录」折叠分组，默认展开前 3 组；顶部显示总条数与总占用。单条删除与全选批量删除都走二次确认。
+  - 服务端 `GET/POST /dsh-purge/backups`，带 `?force=1` 绕过缓存。
+- **性能：`listBackups` 加 10 秒 TTL 缓存**。原先每次调用都要全盘递归 stat 上千个条目（270ms / 次），而前端每 30 秒轮询一次，等于每半分钟卡一次主线程。现在冷启 382ms、命中 0ms；删除后立刻失效缓存。前端轮询降到 5 分钟，`document.hidden` 时跳过，打开面板走 `?force=1`。
+- **修复：删得掉看不见、看得见删不掉**。
+  - `allowedRoots` 用的是 `aiBase`（`…\app\node_modules\@deepseek-ai`），而扫描根是 `hostScanRoot(aiBase)`（`…\app`）。`app\lib\main.js.dshpurge.bak` 落在后者的子树里、前者的外面，结果列得出来、删除被「不在允许范围」拦下。允许根改为与扫描根对齐。
+  - `/\.bak(\.[A-Za-z0-9_-]+)?$/i` 里的字符类 `[.-]` 是 `. (46)` 到 `- (45)` 的**空区间**，V8 下不匹配任何字符。宿主 `sanitizeProfile()` 写的正是 `.bak-<Date.now()>` 形态，所以这一类备份在面板里根本不存在。改为 `[-.]`，`profile` 组从 5 项恢复到 15 项。
+- **修复：侧边栏底部两个入口被对半分**。宿主 `.footerActions{display:flex}`，Cordis 入口与「历史备份」入口都写 `width:100%`，作为可压缩 flex item 会各占 50%，文字被 ellipsis 吃掉、徽标被挤出可见区。改为 `flex:1 1 0` + `min-width:0`，图标与徽标 `flex:none`，文字才吃剩余空间。
+- **修复：弹窗层次与交互**。
+  - 弹窗改由 `BackupPortal` 挂到 `document.body`。原先渲染在侧边栏底部的层叠上下文里，父级有 transform/overflow 时 `position:fixed` 会退化成相对容器定位，症状是定位错、滚不动、显示不全。
+  - 背景改为实色 `#fffcf7` / 深色 `#26261f`，遮罩 `rgba(0,0,0,.55)`，去掉半透明分层色与 `backdrop-filter`，不再看不清。
+  - `max-height: calc(100vh - 56px)`，只让列表区滚动，头部与底部按钮固定。
+  - Escape 加 `stopPropagation` + `preventDefault`：宿主也在 `document` 上监听 Escape，原先一次 Esc 会连带关掉宿主的侧边栏面板。
+  - 打开面板时锁 `body` 滚动，关闭时还原。
+  - `load()` / `doDelete()` 加卸载守卫与请求序号，快速关开面板不再 `setState on unmounted`。
+- **修复：`wide` 兜底写宽**。`slot` owner 不传 `props` 时会走 `wide=true`，把 100% 宽的按钮塞进 56px 轨道。改为只认显式 `wide === true`。
+- **修复：桌面端双击启动缺 `DSH_PROFILE`**（补丁 #82 落地）。从 Explorer 继承的环境常缺这个变量，host 子进程报 `cannot determine the boot profile`，cordis 不加载，插件没 activate，注入全断。`lib\main.js` 顶部加兜底：未设置时默认 `desktop`。
+- **验证**：`/dsh-purge/backups?force=1` 返回 `total_count=74 / 6.12 MB / 54 目录`，分组 `host:59, profile:15, snapshot:1`；删除替身文件成功、`hosts`/非 `.bak`/目录穿越三类危险路径全部被拦；`PUT` 返回 405 且 `Allow: GET, POST`；空 `ids` 返回 400；未知 `op` 返回 `{ok:false}`。全部既有端点回归 200。
+
+## English
+
+- **1.1.91**.
+- **New: "backup directory manager" in the sidebar**. Sits at the bottom of the sidebar, same width and height as the settings row, ordered after the Cordis plugin entry. The badge shows the live backup count; clicking opens the full inventory.
+  - Four backup sources are covered: `*.dshpurge.bak` in the host tree (59 entries), `*.bak-<timestamp>` written by the host's `sanitizeProfile()` plus legacy manual snapshots under `$DSH_HOME/profiles` (15 entries), shim originals under `$DSH_HOME/dsh-purge/shim-backups`, and whole-directory `lib.bak-restrict-*` snapshots in the plugin root.
+  - Grouped by directory relative to the install root, first three groups expanded; the header shows total count and size. Single and bulk delete both go through a confirmation step.
+  - Served by `GET/POST /dsh-purge/backups` with `?force=1` to bypass the cache.
+- **Performance: 10-second TTL cache on `listBackups`**. Every call used to recurse and stat thousands of entries (270 ms), while the client polled every 30 seconds — a main-thread stall twice a minute. Now 382 ms cold and 0 ms on hit; delete invalidates it immediately. Client polling moved to 5 minutes, skipped while `document.hidden`, and the panel opens with `?force=1`.
+- **Fixed: delete refused what the list showed**.
+  - `allowedRoots` used `aiBase` (`…\app\node_modules\@deepseek-ai`) while the scan root is `hostScanRoot(aiBase)` (`…\app`). `app\lib\main.js.dshpurge.bak` lives under the latter and outside the former, so it was listed but rejected with "not in the allowed range". The allowed roots are now aligned with the scan root.
+  - The character class `[.-]` inside `/\.bak(\.[A-Za-z0-9_-]+)?$/i` is an **empty range** from `. (46)` to `- (45)` and matches nothing in V8. The host writes exactly `.bak-<Date.now()>` via `sanitizeProfile()`, so that whole class of backups was invisible to the panel. Changed to `[-.]`; the `profile` group went from 5 entries back to 15.
+- **Fixed: the two footer entries were splitting the row 50/50**. The host uses `.footerActions{display:flex}`, and both the Cordis entry and the backup entry declared `width:100%`; as shrinkable flex items they each took half, so the label was ellipsized and the badge pushed out of view. Now `flex:1 1 0` with `min-width:0`, and `flex:none` on the icon and badge so only the label absorbs the remainder.
+- **Fixed: dialog layering and interaction**.
+  - The dialog is portalled to `document.body` through `BackupPortal`. It used to render inside the sidebar footer's stacking context, where an ancestor with transform/overflow degrades `position:fixed` into container-relative positioning — the symptom was misplacement, no scrolling, and clipped content.
+  - Background is now opaque `#fffcf7` (dark: `#26261f`) with a `rgba(0,0,0,.55)` scrim; the translucent layered colour and `backdrop-filter` are gone.
+  - `max-height: calc(100vh - 56px)` with only the list scrolling; header and footer stay put.
+  - Escape now calls `stopPropagation` + `preventDefault`: the host also listens for Escape on `document`, so one press used to close the host's own panels as well.
+  - `body` scrolling is locked while the dialog is open and restored on close.
+  - `load()` and `doDelete()` have unmount guards plus a request sequence, so rapidly reopening the panel no longer triggers `setState on unmounted`.
+- **Fixed: sloppy `wide` fallback**. When the slot owner passed no props the code fell back to `wide=true`, forcing a 100%-wide button into the 56px rail. It now only accepts an explicit `wide === true`.
+- **Fixed: missing `DSH_PROFILE` when launching by double-click** (patch #82 landed). The environment inherited from Explorer often lacks this variable, so the host child process reports `cannot determine the boot profile`, cordis does not load, the plugin never activates and all injection breaks. `lib\main.js` now defaults it to `desktop` at the top of the module.
+- **Verification**: `/dsh-purge/backups?force=1` returns `total_count=74 / 6.12 MB / 54 dirs` with groups `host:59, profile:15, snapshot:1`; deleting a probe file succeeds and `hosts` / non-`.bak` / path traversal are all rejected; `PUT` returns 405 with `Allow: GET, POST`; empty `ids` returns 400; an unknown `op` returns `{ok:false}`. Every existing endpoint still returns 200.
+
 # 1.1.90
 
 ## 中文
