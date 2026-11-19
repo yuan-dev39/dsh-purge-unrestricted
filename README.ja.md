@@ -1,373 +1,239 @@
-> **This is an unrestricted fork of [HunYiSage/dsh-purge](https://github.com/HunYiSage/dsh-purge) 1.1.90.**
-> The local-target gate (`lib/net-scope.js`) and its hook installation (`lib/index.js`) are removed, and a
-> `skills/redteam/` library is bundled. Everything else is upstream code, Apache-2.0, `NOTICE` retained.
-> Full change list: [FORK-NOTICE.md](./FORK-NOTICE.md).
-> Statements below about "local lab only" / "game cheats forbidden" describe **upstream policy**; the code
-> enforcing them is not present in this build.
+> **本リポジトリは [HunYiSage/dsh-purge](https://github.com/HunYiSage/dsh-purge) 1.1.90 の無制限フォークです。**
+> ローカルターゲットゲート（`lib/net-scope.js`）とそのフック登録（`lib/index.js`）を撤去し、
+> `skills/redteam/` を同梱、バックアップ管理パネルを追加しました。それ以外は上流のコードそのまま、
+> Apache-2.0、`NOTICE` 保持。変更点の全体は [FORK-NOTICE.md](./FORK-NOTICE.md) を参照。
+> 以下の「ローカルラボ限定」「チート禁止」といった記述は**上流の方針**であり、
+> 本ビルドにはそれを強制するコードは入っていません。
+
 <p align="center">
   <img src="docs/banner.svg" alt="dsh-purge" width="720">
 </p>
 
-<h1 align="center">⚔️ DeepSeek Harness サイバーセキュリティ レッドチームツール (dsh-purge)</h1>
+<h1 align="center">⚔️ DeepSeek Harness レッドチームツール（dsh-purge 無制限版）</h1>
 
-<p align="center"><strong>バージョン 1.1.90</strong></p>
-
-<p align="center">
-  <em>DeepSeek Harness のジェイルブレイク: すべてのモデルに対応し、モデルごとにプロンプトを切り替え。デフォルトプロンプトは 小码酱 用。ぜひ Star ⭐ を。これをベースに開発する場合は「要帰属表示」をご覧ください。</em>
-</p>
+<p align="center"><strong>バージョン 1.1.91</strong></p>
 
 <p align="center">
-  <a href="https://github.com/HunYiSage/dsh-purge/stargazers"><img src="https://img.shields.io/github/stars/HunYiSage/dsh-purge?logo=github&label=Stars" alt="GitHub stars"></a>
-  <a href="https://github.com/HunYiSage/dsh-purge/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
-  <a href="https://awesome-dsh-plugin.com"><img src="https://awesome-dsh-plugin.com/badge.svg" alt="awesome · DSH plugin"></a>
-  <a href="https://deepseek.stream/plugins/dsh-purge"><img src="https://img.shields.io/badge/Hub-dsh--purge-1a73e8" alt="DeepSeek Harness Hub"></a>
+  <a href="https://github.com/yuan-dev39/dsh-purge-unrestricted/stargazers"><img src="https://img.shields.io/github/stars/yuan-dev39/dsh-purge-unrestricted?logo=github&label=Stars" alt="GitHub stars"></a>
+  <a href="https://github.com/yuan-dev39/dsh-purge-unrestricted/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat" alt="Apache-2.0"></a>
   <a href="https://www.deepseek.com/harness/"><img src="https://img.shields.io/badge/dsh-0.2.0--rc.2%20%2F%200.2.1--rc.2-blue" alt="DSH"></a>
   <br>
   <img src="https://img.shields.io/badge/Node.js-%3E%3D18-339933?logo=node.js&logoColor=fff" alt="Node.js">
-  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000" alt="JavaScript">
-</p>
-
-<p align="center">
-  <a href="https://dsh-plugin.org/plugins/yujunzhixue/dsh-purge"><img src="https://dsh-plugin.org/badges/listed.svg" alt="Listed on dsh-plugin.org"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%20x64-0078D6" alt="Windows x64">
 </p>
 
 <p align="center">
   <a href="README.md">English</a> | <a href="README.zh-CN.md">中文</a> | <a href="README.ja.md">日本語</a>
 </p>
 
-## 運営チームより
-
-dsh-purge は当初、原作者が個人で開発したプロジェクトです。現在は **dsh-purge 運営チーム** が引き継ぎ、コード、ドキュメント、リリース、セキュリティ対応を担当しています。過去のコミット、Issue、Release はすべて保持され、リンクも変更されません。原作者のクレジットと出所の記録も引き続き保持します。
-
-プロジェクトの境界は変わりません。
-
-- **オープンソース版はローカルラボ専用です。** 攻撃タスクはループバックおよび RFC1918 のプライベートアドレスのみを対象とします。ドメインは先に名前解決され（hosts を含む）、解決されたすべてのアドレスがプライベートまたはループバックである必要があります。ラボ名を公開アドレスに向ける hosts 設定、名前解決の失敗、公開アドレスが混在する応答は拒否されます。
-- **ゲームチートは禁止です。** エイムボット、ウォールハック、メモリ改ざん、アンチチート回避を含み、プロンプト層とセッションゲートの両方で阻止します。
-- オープンソース版にはスキルライブラリとナレッジベースは含まれません。
-
-**オリジナルビルドの転売は禁止です。** 有料転売、ストア掲載のための再スキン、商用製品としての配布は許可されません。フォークおよび派生作品は、出所リポジトリ [HunYiSage/dsh-purge](https://github.com/HunYiSage/dsh-purge) を明記することを条件に許可されます。帰属表示の削除、出所の隠蔽、自作としての提示は、運営チームとして追及します。
-
-運営チームのチャンネル: [t.me/LLM_PoJia](https://t.me/LLM_PoJia)。お知らせと更新情報の配信に使用します。
-
 ## 目次
 
-- [運営チームより](#運営チームより)
 - [これは何か](#これは何か)
-- [要帰属表示](#要帰属表示)
-- [ライセンス](#ライセンス)
-- [対応ホスト](#対応ホスト)
-- [インストール](#インストール)
-- [プレビュー](#プレビュー)
+- [このフォークでの変更点](#このフォークでの変更点)
+- [必要なもの](#必要なもの)
+- [クライアントのダウンロード](#クライアントのダウンロード)
+- [プラグインのインストール](#プラグインのインストール)
+- [確認](#確認)
 - [使い方](#使い方)
-- [仕組み](#仕組み)
-- [復元](#復元)
-- [リリース](#リリース)
+- [バックアップ管理パネル](#バックアップ管理パネル)
+- [復元とアンインストール](#復元とアンインストール)
+- [ディレクトリ構成](#ディレクトリ構成)
+- [パス検出](#パス検出)
+- [トラブルシューティング](#トラブルシューティング)
+- [ローカルチェック](#ローカルチェック)
+- [帰属とライセンス](#帰属とライセンス)
 
 ---
 
 ## これは何か
 
-**dsh-purge** は、お使いのマシンにすでにインストールされている公式 [DeepSeek Harness](https://www.deepseek.com/harness/) 向けのサイバーセキュリティ レッドチームプラグインです。**1.1.90** は **DSH 0.2.1-rc.2** を対象とします（0.2.0 も動作します）。**DSH 0.2.1-rc.3 以降の新しい RC は非対応です。** 公式 **Web**（`dsh web`）と公式 **デスクトップ EXE** の両方に対応します。インストールと Apply はそれぞれ別々に行います。
+**dsh-purge** は、お使いのマシンにすでにインストールされている[公式 DeepSeek Harness](https://www.deepseek.com/harness/) 向けのレッドチームプラグインです。**1.1.91** は **DSH 0.2.1-rc.2** を対象とします（0.2.0 でも動作）。**DSH 0.2.1-rc.3 以降の RC は非対応。** 公式 **Web**（`dsh web`）と公式**デスクトップ EXE** の両方に対応。インストールと Apply はホストごとに別々に行います。
 
-Harness は単にプロンプトを転送するだけではありません。プロンプトの書き換え、承認ゲート、サンドボックスポリシー、セッション移行を実行時に行います。「モデルは答えるか」だけを問うと、ホスト層のブロックをモデルの拒否と取り違えてしまいます。このプラグインは、あなた自身のインストール環境でこの 2 つの層を分離し、制御された評価や、どのデフォルトポリシーが過度に厳しいかを確認するために使います。
+Harness はプロンプトを転送するだけではありません。実行時にプロンプト、承認ゲート、サンドボックスポリシー、セッション移行を書き換えます。「モデルが答えるか」だけを見ると、ホスト層のブロックをモデルの拒否と誤認します。本プラグインはその 2 層を手元のインストール上で分離し、統制された評価と、どの既定ポリシーが厳しすぎるかの確認を可能にします。
 
 | 得られるもの | 内容 |
 |---|---|
-| **dsh-purge ドック** | セッションタイトルの横のボタンで右ドックを開く。2 ページ: Clean と Drill |
-| **Clean** | グループ化されたパッチ状況、Apply / Restore / Uninstall、プロンプトエディタ、複数のルールセット |
-| **Drill** | 安定版に内蔵。認可後: アセットとローカル環境。このビルドはスキルやナレッジベースを同梱しません。ローカルラボ専用 |
-| **ホストポリシー** | デフォルトのコピー、権限ポリシー、ツール制限。公式の機能はそのまま。2 つ目の架空アイデンティティは作らない |
-| **起動時** | チェックして再適用。npm が `node_modules` を上書きした後も、ファイルを手編集しなくてよい |
+| **dsh-purge ドック** | セッションタイトル横のボタンで右パネルを開く。Clean と Drill の 2 ページ |
+| **Clean** | パッチ状態のグループ表示、Apply / Restore / Uninstall、プロンプトエディタ、複数ルールセット |
+| **Drill** | 同梱。認可後にアセットとローカル環境を表示。レッドチーム技能ドキュメント 23 本を同梱 |
+| **ホストポリシー** | 既定文言、権限ポリシー、ツール制限。公式の能力は維持し、別の人格は作らない |
+| **バックアップ管理** | サイドバー下部のエントリ。本プラグインとホストが書いたすべてのバックアップを一覧し、個別・一括削除が可能 |
+| **起動時** | 毎回チェックして再適用。npm が `node_modules` を上書きしても手で編集しなくてよい |
 
-ドライブレターのハードコードはありません。`$DSH_HOME`、dsh ランチャー横の `.dsh`、次に `~/.dsh` を参照します。Harness のソースツリーにはパッチしません。変更を書き込むのは **dsh-purge** の **Clean** ページの **Apply** です。アイデンティティはプラグインに同梱された暗号化プロンプト、つまりプロンプトボックスがデフォルトで表示するテキストから来ます。ホストのプロンプトファイルは読みません。
-
-触れるのはユーザーのマシン上の公式 `@deepseek-ai` パッケージとローカル設定だけです。公開スキャナーでもなく、第三者サイトへの攻撃キットでもありません。リポジトリにマルウェア、未認可のエクスプロイトスクリプト、公開インターネットを狙うペイロードは同梱されていません。
-
----
-
-## オリジナルの転売は禁止。フォークは帰属表示が必須。
-
-## 要帰属表示
-
-**オリジナルビルドの転売は禁止です。** 有料転売、ストア掲載のための再スキン、商用製品としての配布は許可されません。
-
-**フォークは帰属表示が必須** で、出所のリポジトリを明記してください: [HunYiSage/dsh-purge](https://github.com/HunYiSage/dsh-purge)。名前、アイデア、コード、プロンプトを借用する場合も同様です。
-
-帰属表示の削除、出所の隠蔽、オリジナルの転売は、運営チームとして追及します。
-
-## ライセンス
-
-本リポジトリは [Apache License 2.0](./LICENSE) です。フォークおよび再配布では著作権表示と [NOTICE](./NOTICE) を保持し、[HunYiSage/dsh-purge](https://github.com/HunYiSage/dsh-purge) を明記してください。オリジナルの転売は禁止です。
+ドライブレターはハードコードしません。`$DSH_HOME` → dsh ランチャー隣の `.dsh` → `~/.dsh` の順に探します。Harness のソースツリーは書き換えません。実際にファイルを書くのは **dsh-purge** パネル **Clean** ページの **Apply** です。アイデンティティはプラグインに同梱された暗号化プロンプト、つまりプロンプト欄に既定で表示されるテキストです。ホストのプロンプトファイルは読みません。
 
 ---
 
-<a id="strict-legal--compliance-disclaimer"></a>
+## このフォークでの変更点
 
-<div>
+詳細は [FORK-NOTICE.md](./FORK-NOTICE.md) と [release-notes.md](./release-notes.md) を参照。
 
-### ⚠️ <font color="red">厳格な法的・コンプライアンス免責事項</font>
+### プラグイン
 
-<font color="red">
+| 箇所 | 変更 |
+|---|---|
+| `lib/net-scope.js` | リージョンゲートを無効化：`isAttackTask` / `isCheatTask` は常に `false`、`publicHostHit` / `taskTargetHit` は常に `null`、`ownServerNote` は空文字列、`installRegionGate()` は即 return |
+| `lib/index.js` | `installRegionGate(ctx)` を呼ばない |
+| `skills/redteam/` | 技能ドキュメント 23 本を同梱（active-scan、asset-correlation、browser-automation、chisel-tunnel、cn-proxy-pool、credential-attack、dir-bruteforce、fofa-recon ほか） |
+| `lib/backups.js` | **新規。** 4 種類のバックアップ元を集計、TTL キャッシュ 10 秒 |
+| `client.js` | **新規。** サイドバー下部「历史备份目录管理」エントリ、ダイアログは portal 経由でマウント |
 
-**免責事項:** 本プロジェクトは非営利のオープンソースプロジェクトです。適用される法律および利用するプラットフォームの規則に従い、学習と研究のみを目的としています。違法または非準拠の目的に使用しないでください。生じた結果は利用者が負います。
+### クライアント（dsh-next）
 
-**ゼロトレランス声明:** 本プロジェクトはいかなる違法行為にも反対し、禁止します。運営チームは、未認可のネットワーク攻撃、エクスプロイトの使用、データの窃取、コンピュータ情報システムへの不正侵入、違法または禁止されたコンテンツの生成を支援、奨励、幇助しません。**本プロジェクトを犯罪に使用した者は、法律上すべての責任を単独で負います。運営チームは一切の責任を負いません。**
+| 箇所 | 変更 |
+|---|---|
+| `lib/main.js` | `DesktopUpdateCoordinator.start()` / `check()` を短絡——`https://www.dshdesktop.cn/api/desktop/version` への通信を停止。「更新を確認」は「最新です」とだけ返し、新しいビルドが改変済みファイルを上書きしない |
+| `lib/main.js` | パッチ #82：エクスプローラ起動時に `DSH_PROFILE` が無ければ `desktop` にフォールバック |
+| 手動調整 4 点 | ホスト起動タイムアウト 60s → 300s、サイドバー既定 360px・最大 780 までドラッグ可、サイドバー余白 10/4px、`/dsh-session-delete` と右クリック削除を追加 |
 
-1. **本リポジトリに違法な素材は含まれません。** 公開されているコード、ドキュメント、パッチ、デフォルトプロンプトは、マルウェア、バックドア、未認可のペンテストキット、ランサムウェア、クレデンシャルスタッフィングスクリプト、公開インターネットや第三者システムを狙う攻撃ペイロードでは **ありません**。本プロジェクトは違法コンテンツを提供せず、犯罪を扇動・組織・幇助しません。
-2. **ローカルの公式 Harness のみ。** セキュリティ評価用パッチとプロンプトインジェクションは、**ユーザーのマシンにすでにインストールされた公式 DeepSeek Harness**（`@deepseek-ai` パッケージ、ローカルプロファイル / `$DSH_HOME`）に対してのみ動作します。対象はユーザー自身の公式ローカルソフトウェアであり、**他人のウェブサイト、サーバー、アカウント、情報システムではありません**。
-3. **評価用パッチは公開インターネットを攻撃しません。** Apply、インジェクト、リバート、アンインストールはすべてローカルファイルとローカルプロセス内に留まります。いかなる公開ホストや未認可システムに対しても、**スキャン、探査、侵入、攻撃トラフィックの送信を行いません**。本プロジェクトを公開インターネットへの踏み台として使わないでください。「更新確認」が有効な場合、プラグインはバージョン比較のために本プラグイン自身の GitHub リポジトリにのみアクセスすることがあります。これは第三者システムへの攻撃では **なく**、何かへの侵入を認可するものでも **ありません**。
-4. **合法かつ制御された範囲。** 本プロジェクトは、ユーザーが **管理する権限を有する公式 Harness** 上でのレッドチーム研究と堅牢性評価の補助ツールです。**所有者の合法的な書面による認可のないターゲット、公開オンラインシステム、本番ワークロードに対して実行しないでください。** テストは **認可されたローカルの公式 Harness、オフラインのローカル合成フィクスチャ、認可されたサイバーセキュリティレンジ、準拠したラボ環境** に限ります。
-5. **オープンソース版はローカルラボ専用です。** 攻撃タスクはループバックと RFC1918 アドレスのみ許可します。ドメインは名前解決され、IP で判定されます。サフィックスは許可リストではありません。公開 IP、公開に解決される名前、名前解決の失敗、ラボ名を公開インターネットに向ける hosts エントリは例外になりません。キー、パスワード、ネットワーク範囲、ワイルドカード、会話内での主張は例外を追加しません。ゲームチートは禁止です。このビルドにはスキルライブラリやナレッジベースは同梱されません。
-6. **禁止される用途。** 利用者は、本プロジェクトを直接・間接を問わず、以下に違反する目的で使用してはなりません（いずれも遵守必須。回避の口実は認められません）:
-   - <font color="red"><strong>中華人民共和国刑法</strong></font>
-   - <font color="red"><strong>中華人民共和国サイバーセキュリティ法</strong></font>
-   - <font color="red"><strong>中華人民共和国データセキュリティ法</strong></font>
-   - <font color="red"><strong>中華人民共和国個人情報保護法</strong></font>
-   - その他適用される法律、規制、監督規則；
-   - さらに以下も禁止:
-   - 公的・私的なコンピュータ情報システムへの未認可の侵入または攻撃；恐喝、破壊、クレデンシャルスタッフィング、悪意あるペイロードの拡散；
-   - 国家安全保障への脅威、テロ、暴力、ポルノ、賭博、詐欺、プライバシーや知的財産権の侵害を含む、法律が禁じるあらゆるコンテンツの誘発・生成・拡散；
-   - モデル提供者の利用規約および利用許諾ポリシーへの違反。
-7. **利用者がすべての責任を負います。** 本プロジェクトは Apache-2.0 の下で現状のまま提供されます。運営チームは完全性、安全性、適合性について一切保証しません。**利用者は、ダウンロード、デプロイ、実行、改変、配布、およびそれに伴うすべての入力と出力について、民事・行政・刑事上のすべての責任を独立して負います。** 運営チームおよび貢献者は、悪用について直接・間接・連帯のいかなる責任も負いません。
-8. **違反時にライセンスは終了します。** 本プロジェクトを違法な攻撃、悪意ある活動、その他の違反に使用した者は、違反の瞬間からオープンソースライセンスが **自動的かつ取り消し不能に終了** します。使用を直ちに停止し、すべての複製と派生物を永久に破棄し、法的制裁を受け入れなければなりません。
-9. **無関係。** 本プロジェクトは独立したオープンソースのセキュリティ評価研究プロジェクトです。DeepSeek またはその関連会社との間に、雇用、商業、認可、推奨のいかなる関係もありません。ここでの「公式」は、評価対象がユーザーのマシン上の公式 DeepSeek Harness パッケージであることだけを意味します。DeepSeek が本プラグインを開発・承認・保証したことを **意味しません**。
-10. **帰属表示は必須です。** 本プロジェクトの名前、アイデア、コード、プロンプトを借用する場合は、運営チームをクレジットし本リポジトリを明記しなければなりません。帰属表示の不履行は追及します。[要帰属表示](#要帰属表示) を参照してください。
+### 1.1.91 の修正
 
-</font>
-
-</div>
+- **一覧に出るのに削除できない** —— `allowedRoots` は `aiBase`、走査ルートは `hostScanRoot(aiBase)`。`app\lib` 配下のバックアップが隙間に落ちていた。許可ルートを走査ルートに揃えた。
+- **バックアップ一種類が丸ごと不可視** —— 文字クラス `[.-]` は `. (46)` → `- (45)` の空レンジで、V8 では何にもマッチしない。ホストが書く `.bak-<Date.now()>` がすべて漏れていた。`[-.]` に修正し、profile グループは 5 件から 15 件に回復。
+- **フッターが 50/50 分割** —— 両エントリが flex 行内で `width:100%` を宣言。`flex:1 1 0` + `min-width:0` に変更。
+- **ダイアログの位置ずれ** —— `document.body` に portal。不透明背景にし、スクロールはリストのみ。
+- **Esc 1 回で 2 層閉じる** —— `stopPropagation` + `preventDefault`、body のスクロールもロック。
+- **`setState` on unmounted** —— `load()` / `doDelete()` にアンマウントガードとリクエスト連番。
+- **`wide` フォールバック** —— 明示的な `wide === true` のみ受理。
+- **性能** —— `listBackups` は 1 回 270 ms、フロントは 30 秒ポーリング。TTL キャッシュ 10 秒（コールド 382 ms、ヒット 0 ms）＋フロント 5 分ポーリングに変更。
 
 ---
 
-## 対応ホスト
+## 必要なもの
 
-**1.1.81 以降が DSH 0.2.1-rc.2 を対象とします。** 0.2.0 も動作します。0.1.x には適用しないでください。
+- Windows 10 / 11 x64（同梱クライアントは win-x64 のみ。プラグイン自体はクロスプラットフォーム）
+- 空きディスク約 6 GB（クライアント解凍後 約 1.5 GB、同梱の Python / Node / pnpm ランタイムを含む）
+- 下記の**改変クライアント**、または公式 DSH NEXT `2.0.19-next` の既存インストール（パッチ適用を許容できること）
 
-- **dsh 0.2.1-rc.2**（公式デスクトップ / 公式 `dsh web`）: **1.1.81** 以降を使用。`{{cwd}}` / `[cwd]` クラッシュ、patch #40 のマッチ、削除された `toolFilter`、ホスト `dsh-tools` の解決、hostFs の fd、デスクトップヘルパーの自己終了、`file:` アーカイブ更新、Ctrl+Enter ステアを修正。
-- **dsh 0.2.0-rc.2**: **1.1.40** 以降を使用。このラインもインストールできます。
-- **dsh 0.1.7**（rc.1 / rc.2 を含む）: **1.1.39** 以前を使用 — [Releases](https://github.com/HunYiSage/dsh-purge/releases) で該当タグを選択。
-- **dsh 0.2.1-rc.3 / rc.4 以降は非対応です。** マッチしないパッチは pending または skipped のままで、盲目的な書き換えはしません。**0.2.1-rc.2** に留まってください。
-
-マッチしないパッチは pending または skipped のままで、盲目的な書き換えはしません。
+Node と pnpm は**クライアントに同梱**されています。別途インストールは不要です。
 
 ---
 
-## インストール
+## クライアントのダウンロード
 
-**プラグインマーケットプレイスは使わないでください。** [dsh-plugin.org](https://dsh-plugin.org) や 設定 → プラグインマーケット でのワンクリックインストールは `already queued: dsh-purge` で失敗し、コマンドを実行しません。`dsh-purge` という名前は npm レジストリにないので、`pnpm add dsh-purge` はしないでください。
+クライアントは**このリポジトリのツリーには含まれません**。Release アセットとして配布しています。
 
-### クイックスタート
+**[releases/tag/harness-2.0.19-next-unrestricted](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/harness-2.0.19-next-unrestricted)**
 
-PATH に `dsh` があれば、コマンド 1 つ、再起動 1 回、クリック 1 回。自分が開いているホストのコマンドをそのまま実行します（デスクトップ EXE は `web` の代わりに `desktop`）:
-
-```sh
-# 公式 `dsh web`
-dsh plugin --profile web add https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master
-
-# 公式デスクトップ EXE
-dsh plugin --profile desktop add https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master
-```
-
-1. インストールしたホストを **完全に終了して再起動** します。Web: `dsh web` を停止して起動し直す。デスクトップ: トレイアイコンも終了してから exe を開く。
-2. そのホストで、セッションタイトルの横の **dsh-purge** → **Clean** → **Apply** をクリック。成功した Apply は 1 回だけ再起動します。
-
-完了 — チャットで `/purge status` を実行して確認します。pnpm がビルド許可を尋ねてきた場合や、下記の何かが現れない場合は、この後のステップ別の手順に進んでください。
-
-### ステップバイステップ
-
-**ステップ 1 — 使うホストを選ぶ。** 公式 `dsh web` と公式デスクトップ EXE は **別々に** インストール・パッチされます。実際に開くホストにのみインストールしてください。
-
-| 実行するもの | プロファイル | インストールコマンド |
+| ファイル | サイズ | 用途 |
 |---|---|---|
-| 公式 `dsh web` | `web` | クイックスタートの `web` の行 |
-| 公式デスクトップ EXE | `desktop` | クイックスタートの `desktop` の行 |
+| `DSH-NEXT-2.0.19-next-unrestricted-win-x64.zip` | 416.9 MB (437,123,932 B) | **クライアント一式。** 公式 `2.0.19-next` を解凍済み、パッチ適用済み、自動更新オフ。解凍して実行するだけ |
+| `harness-patch-2.0.19-next.zip` | 0.91 MB (950,103 B) | 旧パッチ集。`harness-patch-1.1.91.zip` に置き換え済み |
 
-**ステップ 2 — プラグインを入れる。** 圧縮パッケージの URL は `codeload.github.com` の書き方そのままにしてください。`github.com/.../archive` は使わないでください。その 302 により pnpm が `fetch failed` で失敗します。
-
-`dsh` がある場合: クイックスタートの自分のプロファイルの行を実行します。このディレクトリがすでにクローンなら、URL の代わりに `.` を使います。
-
-pnpm のみ（`dsh` 不要）: リポジトリのルートではなく、実際に使うプロファイル内で実行してください。
-
-```sh
-cd "$DSH_HOME/profiles/web"    # desktop: profiles/desktop
-pnpm add https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master
-```
-
-Windows PowerShell:
+すでにパッチ適用済みの `2.0.19-next` を動かしている場合、一式を再取得する必要はありません。[v1.1.91 リリース](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.91) の `harness-patch-1.1.91.zip`（0.93 MB、62 ファイル）を使ってください。
 
 ```powershell
-cd "$env:USERPROFILE\.dsh\profiles\web"   # desktop: profiles\desktop
-pnpm add https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master
+# 1. 固定の場所に置く。デスクトップやダウンロードは不可——ホストは
+#    profile、プラグイン、セッションをこのパス配下に保持する
+New-Item -ItemType Directory -Force -Path "D:\DSH NEXT"
+
+# 2. 解凍
+Expand-Archive -Path "$env:USERPROFILE\Downloads\DSH-NEXT-2.0.19-next-unrestricted-win-x64.zip" `
+               -DestinationPath "D:\DSH NEXT" -Force
+
+# 3. Mark-of-the-Web を除去し、SmartScreen のブロックを解く
+Get-ChildItem "D:\DSH NEXT" -Recurse -File | Unblock-File
 ```
 
-`pnpm add` と `dsh plugin add` はパッケージを取得します。`postinstall` が `dsh-purge` を `dsh.profile.bundles` に書き込み、プロファイルの `cordis.patch.yml` に body `insert` を追加します。その insert がないとホストはプラグインを読み込まず、ボタンも現れません。
-
-**完了の目安:** `node_modules/dsh-purge/package.json` が存在し、そのプロファイルの `bundles` に `"dsh-purge"` があり、`cordis.patch.yml` に `id: dsh-purge` の insert があること。
-
-- pnpm 11/12 はビルドを許可しないとインストールスクリプトをスキップします（`ERR_PNPM_IGNORED_BUILDS`）:
-
-```sh
-pnpm add --allow-build=dsh-purge --allow-build=dsh-purge@https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master
-# すでにインストール済みで警告のみの場合 — 完全な指定子が必要です（名前だけだと "set this to true or false" が残ります）:
-pnpm approve-builds dsh-purge@https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master
-# bundles / insert がまだ無い場合:
-node node_modules/dsh-purge/scripts/ensure-profile-bundle.mjs
-```
-
-- `dsh` も pnpm も使えない場合は [手動インストール](#手動) に進んでください。
-- デスクトップクライアントではボタンをクリックすることもできます（`dsh://` ディープリンク。同じ tarball をダウンロードします）。
-
-<p align="center">
-  <a href="dsh://plugin/install?id=dsh-purge&name=dsh-purge&version=1.1.90&repo=HunYiSage%2Fdsh-purge&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E6%9C%AC%E6%9C%BA%E8%A1%A5%E4%B8%81%2C%E8%AE%BE%E7%BD%AE%E9%A1%B5&downloadUrl=https%3A%2F%2Fcodeload.github.com%2FHunYiSage%2Fdsh-purge%2Ftar.gz%2Frefs%2Fheads%2Fmaster"><strong>デスクトップクライアントでインストール</strong></a>
-</p>
-
-**ステップ 3 — ホストを再起動する。** プラグインをプロファイルに追加しただけでは、`@deepseek-ai` にパッチは当たりません。インストールしたホストを完全に終了して再起動します（Web: `dsh web` を停止して起動し直す。デスクトップ: トレイアイコンも終了してから exe を開く）。
-
-**完了の目安:** セッションタイトルの横に **dsh-purge** がある。見当たらない場合はステップ 5 へ。
-
-**ステップ 4 — Apply して確認。** **そのホスト** で、セッションタイトルの横の **dsh-purge** をクリックし、**Clean** を開いて **Apply** をクリック。ホストの設定ページにはありません。成功した **Apply** は 1 回だけ再起動します。完了しなかった場合は再起動しません。Web のコントロールは Web のみに、デスクトップのコントロールはデスクトップアプリのみに作用します。片方のホストからもう片方を Apply しないでください。
-
-**完了の目安:** チャットで `/purge status` を打つと `DSH_HOME` とパッチ一覧が表示され、パスは実際に実行しているホームであること。インストールされていないオプションパッケージ（liangshen）は skipped と表示され、Apply を妨げません。
-
-**ステップ 5 — トラブルシューティング。** 上のステップが「完了の目安」で終わらなかったときだけ読むセクションです。
-
-- **セッションタイトルの横にボタンが無い。** `dsh --dump-config`（または `dsh --profile desktop --dump-config`）を実行し、body 行に `id: dsh-purge`（`dsh-purge-redteam` ではない）があるか確認します。無ければステップ 2 の `ensure-profile-bundle.mjs` を実行し、ホストを完全に終了して再起動します。このバージョン以降は、起動時にライブのレッドチーム子エントリが欠けている insert も書き込みます — もう一度終了・再起動してください。先頭の `entry "redteam-store" not found` は古いレッドチームパッケージの名残で、無視して構いません。
-- **マーケットが `already queued: dsh-purge` と言う。** マーケットのクリックをやめてください。ステップ 2 の `dsh plugin add` か pnpm を再度使います。CLI もすでにあると言う場合は、先に削除してから入れ直し、ステップ 3 をやり直します:
-
-```sh
-dsh plugin --profile desktop remove dsh-purge
-dsh plugin --profile desktop add https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master
-```
-
-pnpm のみ:
-
-```sh
-cd "$DSH_HOME/profiles/desktop"
-pnpm remove dsh-purge
-pnpm add https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master
-```
-
-Web では `desktop` を `web` に置き換えます。
-
-### その他
-
-**アシスタントに任せる。** 以下のブロックをローカルアシスタントに貼ってください。実行すべきはインストールコマンドのみです — ディスクスキャン、ほかの編集、Apply、再起動はしません。
-
-<details>
-<summary><strong>AI アシスタント向け（インストールのみ）</strong></summary>
-
-<!-- AI-AGENT-START -->
-
-DeepSeek Harness プラグイン `dsh-purge` を Web プロファイルのみにインストールしてください。ディスク全体をスキャンしない、ほかのファイルを読み書きしない、設定を適用しない、アプリを再起動しない。desktop プロファイルにはインストールしない。プラグインマーケットプレイスは使わない。この名前は npm レジストリにないので `pnpm add dsh-purge` はしない。
-
-**Web（公式 `dsh web`）**
-
-`dsh` が PATH にある場合:
-
-```sh
-dsh plugin --profile web add https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master
-```
-
-`dsh` が無く pnpm がある場合は、`$DSH_HOME/profiles/web`（多くは `~/.dsh/profiles/web`）に `cd` して実行:
-
-```sh
-pnpm add https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master
-```
-
-このディレクトリがすでにクローンで `dsh` がある場合は `dsh plugin --profile web add .` を使う。`dsh` も pnpm も無ければ、ユーザーに伝えて停止する。
-
-コマンドが完了したら、`dsh web` を完全に終了して再起動し、セッションタイトル横の **dsh-purge** を開いて **Clean** の **Apply** を押すようユーザーに伝える。その後停止する。
-
-<!-- AI-AGENT-END -->
-
-</details>
-
-<a id="手動"></a>
-
-**手動インストール。** コマンドが失敗する場合、または `dsh` が PATH に無い場合に使います。**実行するホストのプロファイルだけ** を編集してください — もう片方には触れず、既存の bundles を削除しないでください。
-
-<details>
-<summary><strong>完全な手動手順</strong></summary>
-
-**1. このホストが使う `$DSH_HOME` を見つける。** 本物のホームは `.dsh`（公式 EXE では `dsh-home` のこともある）という名前で、`profiles` を含み、少なくとも 1 つの `profiles/<name>/package.json` を持ちます。順に確認: `DSH_HOME` 環境変数 → インストールルート横の `.dsh`（ポータブル）→ `%USERPROFILE%\.dsh` または `~/.dsh` → `%APPDATA%` / `%LOCALAPPDATA%\DeepSeek Harness\dsh-home`。確認: `profiles/web/package.json` の `"name"` が `"dsh-profile-web"`（または `dsh-profile-desktop`）であること。マシンにはホームが 2 つあることが多いので、実際に起動するホストのものを使ってください。
-
-候補を一覧する PowerShell:
+形態が正しいか確認——**解凍済み**であること、`app.asar` に詰まったままではいけません。
 
 ```powershell
-$cands = @()
-if ($env:DSH_HOME) { $cands += $env:DSH_HOME }
-$cands += "$env:USERPROFILE\.dsh"
-$dsh = Get-Command dsh -ErrorAction SilentlyContinue
-if ($dsh) {
-  $dir = Split-Path $dsh.Source
-  $cands += @((Join-Path $dir ".dsh"), (Join-Path (Split-Path $dir) ".dsh"), (Join-Path (Split-Path (Split-Path $dir)) ".dsh"))
-}
-$cands += @("$env:APPDATA\DeepSeek Harness\dsh-home", "$env:LOCALAPPDATA\DeepSeek Harness\dsh-home")
-$cands | Select-Object -Unique | Where-Object { $_ -and (Test-Path (Join-Path $_ "profiles")) }
+Test-Path "D:\DSH NEXT\DSH NEXT.exe"                    # True
+Test-Path "D:\DSH NEXT\resources\app\lib\main.js"     # True
+Select-String -Path "D:\DSH NEXT\resources\app\lib\main.js" -Pattern "updates-off" | Select-Object -First 3
 ```
 
-**2. プラグインを `$DSH_HOME/plugins/dsh-purge` に置く**（フォルダ名は `dsh-purge`、`package.json` の `"name"` も `dsh-purge`）。
+3 番目に必ず出力が出ること。出力が無ければ自動更新は**無効化されていません**。原版を動かしています。
+
+**初回起動。** `DSH NEXT.exe` をダブルクリック。初回起動で `%USERPROFILE%\.dsh` を作成し、同梱の `resources\runtime` から Python 3.12.14 / Node 24.21.0 / pnpm 11.8.0 をインストールします。完全オフライン、1〜3 分。UI は `http://127.0.0.1:<ポート>` で開きます。
+
+SmartScreen が 1 回ブロックします（本パッケージはコード署名なし。公式パッケージも同様）。「詳細情報 → 実行」をクリック。
+
+### 既存インストールにパッチを当てる場合
+
+```powershell
+# DSH NEXT を完全終了させる。トレイアイコンも含む
+Expand-Archive -Path "$env:USERPROFILE\Downloads\harness-patch-1.1.91.zip" -DestinationPath "$env:TEMP\hpatch" -Force
+cd "$env:TEMP\hpatch\harness"
+
+# まず dry run：計画を表示するだけで、ファイルには触れない
+powershell -ExecutionPolicy Bypass -File .\install-modified.ps1 -DryRun
+
+# 本実行
+powershell -ExecutionPolicy Bypass -File .\install-modified.ps1 -InstallDir "D:\DSH NEXT"
+
+# ロールバック
+powershell -ExecutionPolicy Bypass -File .\install-modified.ps1 -Revert
+```
+
+スクリプトの流れ：`MANIFEST.txt` を読み 62 ファイルの揃いを検証 → インストール先を特定 → **exe パスが対象ディレクトリ内にあるプロセスだけ**を終了 → `app.asar` を `app.asar.orig` に改名 → `asar-read.mjs`（依存ゼロの Node）で解凍 → `patch\` を上書き → 各ファイルの sha256 を検証。
+
+---
+
+## プラグインのインストール
+
+**プラグインマーケットは使わないでください。** dsh-plugin.org のワンクリック導入や設定のプラグインマーケットは `already queued: dsh-purge` で失敗し、コマンドを一切実行しません。npm レジストリにこの名前は無いので `pnpm add dsh-purge` も不可。
+
+**`codeload.github.com` 形式の URL を厳守してください。** `github.com/.../archive` は 302 リダイレクトを返し、pnpm が `fetch failed` で落ちます。
+
+### コマンド 1 行（desktop プロファイル）
+
+```powershell
+# 同梱の pnpm を探す
+Get-ChildItem "D:\DSH NEXT\resources" -Recurse -Filter "pnpm.cmd" -ErrorAction SilentlyContinue |
+  Select-Object -First 3 FullName
+```
+
+```powershell
+# 実際に使う profile 内で実行——リポジトリのルートではない
+cd "$env:USERPROFILE\.dsh\profiles\desktop"
+
+& "<上で見つかったパス>" add https://codeload.github.com/yuan-dev39/dsh-purge-unrestricted/tar.gz/refs/heads/main
+```
+
+`dsh` が PATH にある場合の等価なコマンド：
 
 ```sh
-git clone https://github.com/HunYiSage/dsh-purge.git "$DSH_HOME/plugins/dsh-purge"
+dsh plugin --profile desktop add https://codeload.github.com/yuan-dev39/dsh-purge-unrestricted/tar.gz/refs/heads/main
 ```
 
-git が無い場合: [master.tar.gz](https://github.com/HunYiSage/dsh-purge/archive/refs/heads/master.tar.gz) をダウンロードし、展開して `dsh-purge-master` → `dsh-purge` にリネームし、`plugins` 以下に置きます。すでにクローンがある場合は、いくつかの `.js` ファイルではなくツリー全体をコピーしてください。
+`dsh web` の場合は `desktop` を `web` に読み替えてください。
 
-**3. そのプロファイルの `package.json` だけを編集する — まずバックアップ。** Web → `$DSH_HOME/profiles/web/package.json`; desktop → `$DSH_HOME/profiles/desktop/package.json`。既存の依存関係と bundle をすべて残したまま、**2 つだけ** 追加します:
+**pnpm 11/12 は install スクリプトを飛ばします**（`ERR_PNPM_IGNORED_BUILDS`）。許可フラグを付けて再実行します：
 
-1. `dependencies` に `"dsh-purge": "file:../../plugins/dsh-purge"` を追加
-2. `dsh.profile.bundles` の **末尾** に `"dsh-purge"` を追加（すでにあればスキップ）
-
-```json
-{
-  "name": "dsh-profile-web",
-  "private": true,
-  "dependencies": {
-    "dsh-purge": "file:../../plugins/dsh-purge"
-  },
-  "dsh": {
-    "profile": {
-      "bundles": [
-        "@deepseek-ai/dsh-base",
-        "@deepseek-ai/dsh-web-app",
-        "dsh-purge"
-      ],
-      "patchReload": "live"
-    }
-  }
-}
+```powershell
+& "<pnpm.cmd>" add `
+  --allow-build=dsh-purge `
+  --allow-build=dsh-purge@https://codeload.github.com/yuan-dev39/dsh-purge-unrestricted/tar.gz/refs/heads/main `
+  https://codeload.github.com/yuan-dev39/dsh-purge-unrestricted/tar.gz/refs/heads/main
 ```
 
-JSON を有効に保ってください（新しい項目の前にカンマ、最後の項目の後ろには無し）。`file:../../plugins/dsh-purge` を絶対パスに変えない、`patchReload` やほかのプラグインに触れない、`"dsh-purge"` を 2 回並べないこと。desktop に `dsh-web-app` 行が無い場合は追加しないでください。
+`postinstall` が `dsh-purge` を `dsh.profile.bundles` に書き込み、profile の `cordis.patch.yml` に body の `insert` を 1 行追加します。この insert が無いとホストはプラグインを読み込まず、ボタンも現れません。
 
-**4. そのプロファイルだけで `pnpm install` を実行**（リポジトリルートや `$DSH_HOME` ではなくプロファイルディレクトリに `cd`）:
+### clone またはローカル zip から
 
-```sh
-cd "$DSH_HOME/profiles/web"   # または profiles/desktop
-pnpm install
+```powershell
+git clone https://github.com/yuan-dev39/dsh-purge-unrestricted.git
+cd "$env:USERPROFILE\.dsh\profiles\desktop"
+& "<pnpm.cmd>" add C:\path\to\dsh-purge-unrestricted
 ```
 
-成功: `profiles/<web|desktop>/node_modules/dsh-purge/package.json` が存在すること。`pnpm` が無い場合は公式 `dsh` に同梱の Node / pnpm を使います。`Could not resolve` の場合は `file:` パスを再確認、JSON エラーの場合はカンマを直すかバックアップを復元します。
+オフライン環境：[v1.1.91 リリース](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.91) の `dsh-purge-unrestricted-1.1.91.zip` をダウンロードし、解凍したディレクトリを上記の方法で `add` します。
 
-**5. そのホストを完全に終了して再起動し、Apply** — 上のステップ 3 とステップ 4 です。カードはセッションタイトルの横に現れます。そのホストでのみ **Apply**（または `/purge apply`）をクリック。カードが無ければ、おそらく別の `.dsh` を編集しています — 手順 1 に戻ってください。
+### 再起動と Apply
 
-</details>
+1. ホストを**完全終了**——デスクトップ版はトレイアイコンも、Web 版は `dsh web` を停止。
+2. 再度開く。セッションタイトル横に **dsh-purge** が現れる。
+3. **dsh-purge** → **Clean** → **Apply** をクリック。Apply 成功でホストが 1 回再起動します。
 
-**アンインストール。** セッションタイトル横の **dsh-purge** → **Clean** → **Uninstall**。ダイアログを確認: 適用済みパッチを元に戻し、元の Harness を復元し、現在のホストを再起動します。無効化やアンインストールは、まだ `redteam` を指しているエージェントプリセットのデフォルトも `standard` に戻すので、プリセットが消えた後もホストはセッションを作成できます。
+Web 側の操作は Web のみ、デスクトップ側はデスクトップのみに効きます。片方のホストからもう片方を Apply しないでください。
 
-<details>
-<summary><strong>アンインストールのコマンドと設定</strong></summary>
+### 手動インストール
 
-```sh
-# またはターミナル / チャットから
-dsh-purge --uninstall
-# /purge uninstall
-```
-
-プラグイン設定は `cordis.patch.yml` にあります（`postPrompt` はデフォルトで空）:
+コマンドがすべて失敗した場合のみ。**実際に動かす profile だけ**を編集し、JSON を壊さず、`dsh-purge` を二重に書かないこと。
 
 ```yaml
+# <profile>\cordis.patch.yml —— body insert を 1 行追加
 - insert:
     - id: dsh-purge
       name: 'dsh-purge'
@@ -381,53 +247,38 @@ dsh-purge --uninstall
         postPrompt: ""
 ```
 
-</details>
+次にその profile へパッケージを入れます：
+
+```powershell
+cd "$env:USERPROFILE\.dsh\profiles\desktop"
+& "<pnpm.cmd>" install
+```
 
 ---
 
-## プレビュー
+## 確認
 
-**dsh-purge** はセッションタイトルの横にあります。右ドックを開き、**Clean** と **Drill** の 2 ページがあります。**Light / Ink** を切り替えられます。パッチはグループ化され、カウントには実際に適用された項目のみが含まれます。ルールセットはエディタの上の一覧にあり、各行に Enable と Delete があります。
+```powershell
+# 1. パッケージが存在する
+Test-Path "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\dsh-purge\package.json"
 
-Drill を初めて開くときは、通知を読み、カウントダウンを待ち、末尾までスクロールして 3 つのチェックボックスにチェックします。Clean にこのステップは不要です。Drill は、あなたが管理するホスト、オフラインターゲット、またはすでに書面による認可のある演習にのみ使えます。
+# 2. bundle として登録されている
+(Get-Content "$env:USERPROFILE\.dsh\profiles\desktop\package.json" -Raw |
+  ConvertFrom-Json).dsh.profile.bundles -contains "dsh-purge"
 
-**Clean**
+# 3. patch ファイルに insert がある
+Select-String -Path "$env:USERPROFILE\.dsh\profiles\desktop\cordis.patch.yml" -Pattern "id: dsh-purge"
+```
 
-![Clean](docs/preview/dock-clean.png)
+3 つすべてが真である必要があります。1 つでも外れたらプラグインは読み込まれません。
 
-**Drill 認可**
+チャット欄で：
 
-![Drill authorization](docs/preview/dock-auth.png)
+```
+/purge status
+```
 
-**Drill**
-
-![Drill](docs/preview/dock-drill.png)
-
-**パッチ**
-
-![Patches](docs/preview/settings.png)
-
-**ローカルラボ**
-
-オープンソース版は localhost / プライベートネットのみ許可します。Clean ページにそう書かれています。公開ホストは登録できません。
-
-| エリア | 表示内容 |
-|---|---|
-| dsh-purge | セッションタイトル横のボタン。ドックを開閉する |
-| Clean | パッチ、プロンプト、ルールセット |
-| Drill | 認可後のアセットと環境。このビルドはスキルやナレッジベースを同梱しません。認可までタブは Unauthorized と表示 |
-| Patches | グループ化された状況、Apply、Restore、Uninstall |
-| Prompt | `prompt-inject.md` をセッションのオーバーライドとして編集 |
-| Local lab | ループバック / RFC1918 のみ。名前は解決され、すべてのアドレスがプライベートでなければならない |
-| Rule sets | 複数の `AGENTS.md` / `CLAUDE.md`。Enable は `$DSH_HOME` 以下に書き込み、Delete は行を削除 |
-
----
-
-## レイアウト
-
-`bin/` は CLI、`lib/` はパッチと drill コンソール、`presets/redteam/` はレッドチームプリセット、`client.js` はドックです。このビルドは `skills/` やナレッジベースを同梱しません。
-
-ランタイムファイルは `$DSH_HOME` 以下にあります: `prompt-inject.md`、`rules/`、`redteam/`。`DSH_HOME` が未設定の場合、ランチャー横の `.dsh` が `~/.dsh` より優先されます。Web とデスクトップアプリはそれぞれ独自のホームを使います。
+`DSH_HOME` とパッチ一覧を出力します。未インストールのオプションパッケージ（liangshen）は skipped と表示され、Apply を妨げません。
 
 ---
 
@@ -441,51 +292,159 @@ dsh-purge --uninstall
 dsh-purge --edit
 
 /purge status | apply | revert | uninstall | edit | help
-/rules list | use <id> | create <id> | delete <id> | reset | help
+/rules  list | use <id> | create <id> | delete <id> | reset | help
 /rewind
 
-# 別のプラグインがすでに /rewind（または /purge, /rules, /skills）を
-# 所有している場合、その名前はスキップされるか /purge-rewind として
-# 再マウントされます。ほかのコマンド、ツール、/dsh-purge/* ルートは動作し続けます。
+# 別のプラグインがすでに /rewind（または /purge、/rules、/skills）を所有している
+# 場合、その名前はスキップされるか /purge-rewind として再マウントされます。
+# ほかのコマンド、ツール、/dsh-purge/* ルートは動作し続けます。
 
 purge_status   purge_apply   purge_revert
 ```
 
-Apply が成功すると、パッチ済みパッケージを読み込むためホストが再起動します。手動で **Restart** をクリックすることもできます。パッチタイトルの下に安定版とテスト版があります。テスト版は `beta` ブランチに追従します。**Switch to stable** は `master` をインストールしてピンを解除します。古い安定版を選ぶとそれがピン留めされます。最新に戻すには **Update** をクリック。古いテストタグは一覧されません。
+Apply が成功するとホストが再起動し、パッチ済みのパッケージが読み込まれます。パッチタイトルの下に安定版とテスト版があり、テスト版は `beta` ブランチに追随します。**Switch to stable** は `main` を入れ、固定を解除します。旧安定版を選ぶとそのバージョンに固定され、**Update** で最新に戻ります。
 
-コンポーザの **Undo once** と **Undo last round** は現在の会話内に留まり、ブランチを開きません。送信した行が入力に戻り、そのカットですでに送信されたメッセージと完了したタスクは現在の会話から外れます。編集して **再送信** します。**1.1.61** から、rewind の範囲は最初のユーザーメッセージではなく **現在のターン** に従います。`/rewind` も同じ動作です。
+入力欄の**1 回取り消し**と**前ラウンド取り消し**は現在の会話内に留まり、ブランチを開きません。送信した行は入力欄に戻り、その切断点以降に送信済みのメッセージと完了済みタスクは現在の会話から外れます。編集して**再送信**します。**1.1.61** 以降、取り消し境界は**現在のターン**に追随し、最初のユーザーメッセージではありません。`/rewind` も同じ挙動です。
 
-**同じタスクが standard では動くのに minimal や PTC で失敗する** 場合、プリセットの `run_code`、サンドボックス、またはプラン傍受テキストがまだクリアされていないことが多く、あるいは組み込み minimal に `agent-instructions` が欠けています。**1.1.61 以降** を使い、**ホストを完全に終了 → Clean で Apply → 再起動 → 新しいチャットを開始** してください。プリセットを切り替えるだけでは、実行中のプロセスのパッチは再読み込みされません。
+### プロンプト注入の判定順
 
-### 応答速度
+毎ターン、3 つの入力が最終システムプロンプトを決めます。点線はそれぞれが駆動する判定を示します：
 
-DSH はツールバッチ内の Bash 呼び出しを 1 つずつ実行します。古い dsh-purge リリースはデフォルトのフォアグラウンド待機を 60 秒から 10 分に引き上げていたため、1 つの遅いコマンドが後続の呼び出しをその間ブロックしていました。patch #21 は、マークされたプラグインの値を公式の 60 秒デフォルトに戻します。マークされていないタイムアウトやその他のカスタム値は保持されます。マークのない 10 分の値はユーザー設定と確実に区別できません。
+```mermaid
+flowchart TD
+  L["ルールライブラリ：セットを有効化 → prompt-inject.md を書く"]
+  W["ローカルルール：カレントディレクトリの AGENTS.md / CLAUDE.md を確認"]
+  P["ワークスペースポリシー：strict / fallback / always"]
 
-`dsh web`（macOS/Linux）で待機を短くするには、`$DSH_HOME/profiles/web/cordis.patch.yml`（通常 `~/.dsh/profiles/web/cordis.patch.yml`）に次のエントリを追加します。重複を追加せず、同じ id の既存エントリを編集してください。このプロファイル層は同梱設定の後に適用されるので、今後のプラグイン Apply でもオーバーライドが維持されます。
+  A["ターン開始"] --> B{"prompt-inject.md が非空?"}
+  B -->|はい| C["注入 = prompt-inject.md (A)"]
+  B -->|いいえ| D{"カレントディレクトリにチェック済みで非空の md がある?"}
+  D -->|はい| E["注入 = 選択されたワークスペース md (B)"]
+  D -->|いいえ| F["注入 = プラグイン同梱の暗号化既定値 (D)"]
+  C --> G{"ワークスペース基線ポリシー (C)"}
+  E --> G
+  F --> G
+  G -->|strict| H["DSH ワークスペース基線セクションを破棄"]
+  G -->|fallback 既定| I{"上にユーザー注入がある? (A または B)"}
+  G -->|always| J["DSH ワークスペース基線セクションを保持"]
+  I -->|はい| H
+  I -->|いいえ| J
+  H --> K["最終システムプロンプト"]
+  J --> K
 
-```yaml
-- id: bash-sandbox
-  config:
-    timeoutMs: 10000
+  L -.-> B
+  W -.-> D
+  P -.-> G
 ```
 
-標準のジョブサービスと `promoteOnTimeout: true` では、未完了のコマンドは 10 秒後にバックグラウンドジョブ id を返し、実行を続けます。`job_output` で読み、`job_kill` で停止します。これはフォアグラウンドの待機を変えるもので、コマンド自体の速度は変わりません。そのサービスが無い、またはプロモーションが無効の場合、タイムアウトでコマンドは終了します。呼び出しごとの `timeoutMs` はこのデフォルトを上書きし、`run_in_background: true` は即座にジョブ id を返します。
+Apply の流れ：
 
-日常的なタスクでは、新しいセッションに対して Low 推論を選ぶこともできます:
-
-```yaml
-- id: agent-default-model
-  config:
-    provider: deepseek-official
-    model: deepseek-flash
-    reasoningEffort: low
+```mermaid
+flowchart TD
+  A["起動または Apply をクリック"] --> B{"パッチは既に適用済み?"}
+  B -->|はい| C["スキップ"]
+  B -->|いいえ| D["元ファイルを .dshpurge.bak にバックアップ"]
+  D --> E["一致したファイルを置換"]
+  E --> F["shim を上書き"]
+  F --> G["プラグイン同梱の暗号化プロンプトを注入"]
 ```
 
-プロファイルを読み込むには `dsh web` を再起動します。モデルと推論のデフォルトは新規作成されるセッションに適用されます。既存のセッションではコンポーザで Low を選択します。プラグインはこれらのモデル設定を自動で変更しません。より深い推論が必要なタスクでは High を保ち、すべてのアプリケーションディレクトリを再帰的にスキャンするのではなくファイル検索を絞ってください。
+---
 
-### ローカルラボ
+## バックアップ管理パネル
 
-攻撃タスクはデフォルトで拒否されます。オープンソース版はループバックと RFC1918 IP のみ許可します。名前は先に解決されます。`.lab` / `.htb` サフィックスだけでは不十分です。ラボ名を公開 IP に向ける hosts エントリはブロックされます。チャットで「これは自分のサーバーだ」と言っても許可されません。
+サイドバー下部の **历史备份目录管理** エントリ。Cordis プラグインエントリの後ろに並び、設定行と同じ幅・高さです。バッジにリアルタイムのバックアップ件数を表示します。
+
+```
+GET  /dsh-purge/backups            キャッシュ経由、TTL 10 秒
+GET  /dsh-purge/backups?force=1    キャッシュを迂回
+POST /dsh-purge/backups            {"op":"delete","ids":[...]}
+```
+
+バックアップの 4 分類：
+
+| グループ | 場所 | 書き手 |
+|---|---|---|
+| `host` | `<app>\**\*.dshpurge.bak` | 本プラグイン（Apply 前） |
+| `profile` | `$DSH_HOME\profiles\**\*.bak` と `*.bak-<タイムスタンプ>` | ホストの `sanitizeProfile()`、および過去の手動スナップショット |
+| `shim` | `$DSH_HOME\dsh-purge\shim-backups\` | shim の元ファイル |
+| `snapshot` | `<プラグインルート>\lib.bak-restrict-*` | ディレクトリ丸ごとのスナップショット |
+
+「インストールルートからの相対ディレクトリ」でグループ化し、先頭 3 グループを既定で展開、ヘッダーに総件数と総容量を表示。個別削除も全選択も確認ダイアログを経ます。削除するとキャッシュは即座に無効化されます。
+
+安全弁：既知のルート配下にある `.bak` / `.bak-<タイムスタンプ>` のみ削除可能。`C:\Windows\System32\drivers\etc\hosts`、`.bak` 以外のファイル、パストラバーサル、使用中のプラグインファイルはすべて拒否します。
+
+---
+
+## 復元とアンインストール
+
+- 最初の Apply 前に、各対象ファイルは `<file>.dshpurge.bak` へ複製されます。
+- **Restore** または `/purge revert` はバックアップを書き戻し、バックアップを削除します。バックアップが無い場合は本プラグインが書いた shim 行を取り除きます。
+- `prompt-inject.md` はユーザーファイルなので保持されます。
+- **Uninstall** はパッチ適用済みならまず復元し、その後で注入ファイル、ルールライブラリ、プラグイン本体を削除します。
+- Apply は冪等です。
+
+---
+
+## ディレクトリ構成
+
+```
+bin/                CLI エントリ
+lib/                パッチ、ホスト検出、Drill コンソール、バックアップ集計
+  backups.js        バックアップの走査 / 一覧 / 削除、TTL キャッシュ 10 秒
+client.js          ドック：パッチパネル、プロンプトエディタ、ルールセット、バックアップ管理
+presets/redteam/    レッドチームプリセット
+skills/redteam/     技能ドキュメント 23 本
+harness/            dsh-next パッチ集 + install-modified.ps1 + MANIFEST.txt
+docs/               バナーとプレビュー画像
+```
+
+ランタイムファイルは `$DSH_HOME` 配下：`prompt-inject.md`、`rules/`、`redteam/`。`DSH_HOME` が未設定なら、ランチャー隣の `.dsh` が `~/.dsh` より優先されます。Web とデスクトップはそれぞれ別の home を使います。
+
+---
+
+## パス検出
+
+まずホスト形態を判定します：`web` / `desktop`（`gui` / `tui` は予約名で、web にフォールバック）。
+
+**Web：**
+1. `DSH_HOME` / `DSH_BASE`
+2. dsh ランチャー隣の `.dsh`（ポータブルインストール、任意のドライブ）
+3. `npm prefix -g` / `npm root -g`
+4. ネストした `@deepseek-ai/dsh/node_modules/@deepseek-ai`
+5. `~/.dsh`
+
+**公式デスクトップ EXE：** 実行中の Harness インストール（`resources/app` または解凍済みパッケージ）。ドライブレターはハードコードしません。Apply 成功で 1 回再起動します。
+
+何も見つからない場合、`DSH_BASE` / `DSH_DESKTOP_INSTALL` を設定してください。ファイルは一切変更しません。
+
+---
+
+## トラブルシューティング
+
+**セッションタイトル横にボタンが無い。** `dsh --dump-config` を実行し、body 行 `id: dsh-purge` を探します。無ければ bundle を補ってから完全終了して再起動：
+
+```powershell
+cd "$env:USERPROFILE\.dsh\profiles\desktop"
+& "<同梱の node.exe>" node_modules\dsh-purge\scripts\ensure-profile-bundle.mjs
+```
+
+**マーケットが `already queued: dsh-purge` を返す。** マーケットをクリックするのをやめ、削除して入れ直します：
+
+```sh
+dsh plugin --profile desktop remove dsh-purge
+dsh plugin --profile desktop add https://codeload.github.com/yuan-dev39/dsh-purge-unrestricted/tar.gz/refs/heads/main
+```
+
+**`cannot determine the boot profile`。** 原版クライアントをエクスプローラから起動しています。`lib/main.js` のパッチ #82 は環境変数が無いとき `DSH_PROFILE=desktop` を補います。`harness-patch-1.1.91.zip` を再適用するか、自分で設定してください：
+
+```powershell
+[Environment]::SetEnvironmentVariable("DSH_PROFILE", "desktop", "User")
+```
+
+**Apply が一部ファイルを skipped と報告する。** クライアント更新後に元ファイルが一致しなくなっています。それらは変更されず、Apply 自体は完了します。
+
+**プラグインは入ったが何も変わらない。** 別のホストに Apply しています。Web とデスクトップは別々の home です。`/purge status` が出力する `DSH_HOME` を確認してください。
 
 ---
 
@@ -494,6 +453,8 @@ DSH はツールバッチ内の Bash 呼び出しを 1 つずつ実行します�
 ```sh
 node --check lib/index.js
 node --check lib/core.js
+node --check lib/backups.js
+node --check lib/net-scope.js
 node --check lib/surface.js
 node --check lib/web.js
 node --check lib/desktop.js
@@ -505,101 +466,10 @@ node --check client.js
 
 ---
 
-## 仕組み
+## 帰属とライセンス
 
-Apply（起動時または Apply クリック時）:
+本リポジトリは [HunYiSage/dsh-purge](https://github.com/HunYiSage/dsh-purge) のフォークで、Apache-2.0 です。フォークと再配布では著作権表示と [NOTICE](./NOTICE) を保持し、元リポジトリを明記する必要があります。差分の詳細は [FORK-NOTICE.md](./FORK-NOTICE.md) を参照してください。
 
-```mermaid
-flowchart TD
-  A["起動または Apply クリック"] --> B{"パッチは既に適用済み？"}
-  B -->|はい| C["スキップ"]
-  B -->|いいえ| D["オリジナルを .dshpurge.bak としてバックアップ"]
-  D --> E["マッチしたファイルを置換"]
-  E --> F["シムを上書き"]
-  F --> G["プラグインに同梱された暗号化プロンプト、プロンプトボックスがデフォルトで表示するテキストを注入"]
-```
+上流の「オリジナルビルドの転売禁止」条項は上流ビルドに適用されるもので、本フォーク自身の変更には及びません。本フォークの変更は同じ Apache-2.0 条件で公開します。
 
-各セッションでのオーバーライド:
-
-```mermaid
-flowchart TD
-  A["再起動または新規セッション"] --> B["プラグインの暗号化デフォルトを注入。保存クリックもホストのプロンプトファイルも無し"]
-```
-
-毎ターンのプロンプトインジェクションとルールセット判定。左側の 3 つの入力は dsh-purge パネルで制御するもので、点線の辺はそれぞれがどの判定を駆動するかを示します:
-
-```mermaid
-flowchart TD
-  L["ルールライブラリ: セットを有効化 → prompt-inject.md に書き込み"]
-  W["ローカルルール: 現在のディレクトリの AGENTS.md / CLAUDE.md を確認"]
-  P["ワークスペースポリシー: strict / fallback / always"]
-
-  A["ターン開始"] --> B{"prompt-inject.md は空でない？"}
-  B -->|はい| C["Inject = prompt-inject.md (A)"]
-  B -->|いいえ| D{"現在のディレクトリにチェック済みのローカル md があり、空でない？"}
-  D -->|はい| E["Inject = 選択したワークスペース md (B)"]
-  D -->|いいえ| F["Inject = プラグイン暗号化スロットのデフォルト (D)"]
-  C --> G{"ワークスペースのベースラインポリシー (C)"}
-  E --> G
-  F --> G
-  G -->|strict| H["DSH ワークスペースのベースラインセクションを除外"]
-  G -->|fallback デフォルト| I{"上記にユーザー inject がある？ (A または B)"}
-  G -->|always| J["DSH ワークスペースのベースラインセクションを保持"]
-  I -->|はい| H
-  I -->|いいえ| J
-  H --> K["最終システムプロンプト"]
-  J --> K
-
-  L -.-> B
-  W -.-> D
-  P -.-> G
-```
-
----
-
-## 復元
-
-- 各ターゲットは最初の apply 前に `<file>.dshpurge.bak` にコピーされます。
-- **Restore** または `/purge revert` はバックアップを戻して削除します。バックアップが無い場合は、このプラグインが書いたシム行を取り除きます。
-- `prompt-inject.md` はユーザーファイルなので保持されます。
-- **Uninstall** はパッチが適用されていればまず復元し、その後 inject ファイル、ルールライブラリ、プラグイン本体を削除します。
-- Apply は冪等です。
-
----
-
-## パス検出
-
-まずホストのサーフェスを検出します: `web` / `desktop`（`gui` / `tui` は予約済みで、なお web にフォールバックします）。
-
-**Web:**
-
-1. `DSH_HOME` / `DSH_BASE`
-2. dsh ランチャー横の `.dsh`（ポータブルインストール、任意のドライブ）
-3. `npm prefix -g` / `npm root -g`
-4. ネストした `@deepseek-ai/dsh/node_modules/@deepseek-ai`
-5. `~/.dsh`
-
-**公式デスクトップ EXE:** 実行中の公式 Harness インストール（`resources/app` または展開されたパッケージ）。ドライブレターはハードコードされません。成功した Apply は 1 回再起動します。
-
-Community Desktop はメンテナンスされていません。
-
-公式の npm グローバルはパッチされません。封印された `host-commands` / `runtime-commands` はスクラブされ、注入されることはありません。
-
-何も見つからない場合は `DSH_BASE` / `DSH_DESKTOP_INSTALL` を設定してください。ファイルは変更されません。
-
----
-
-## リリース
-
-運営チームのチャンネル: [t.me/LLM_PoJia](https://t.me/LLM_PoJia)。お知らせと更新情報の配信に使用します。GitHub [Releases](https://github.com/HunYiSage/dsh-purge/releases) には過去のパッケージもあります。オリジナルビルドの転売は禁止です。フォークは帰属表示が必須です。
-
-## 備考
-
-- 対象範囲は、ローカルの `@deepseek-ai/*` パッケージ内のレンダリング済みコピー、デフォルト、ランタイムロジック、および harness ホーム以下のオーバーライドファイルとルールセットです。
-- アップグレード後、マッチしないオリジナルは skipped と表示されます。Apply はなお完了し、それらのファイルは変更されません。
-- `@deepseek-ai` 外のサードパーティプラグインの *ソースリポジトリ* には手を付けません（CMD サイレンスは、インストール済みの doctor / market / liangshen / mnemon を実行時に **ベストエフォートで** パッチすることがあります）。
-- GitHub tarball からインストールしてください（名前は npm にありません。プラグインマーケットはスキップ）。`dsh` あり: `dsh plugin --profile web add https://codeload.github.com/HunYiSage/dsh-purge/tar.gz/refs/heads/master`。pnpm のみ: `$DSH_HOME/profiles/web` 内でその URL を `pnpm add`。EXE には `desktop` を使用。このリポジトリからは `add .`。
-
----
-
-[LINUX DO](https://linux.do) コミュニティに感謝します
+DSH NEXT 自体の権利は DeepSeek に帰属します。本リポジトリが配布するのは**インストール済み本体のパッケージスナップショット + ローカル改変**であり、公式インストーラではありません。
