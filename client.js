@@ -9082,10 +9082,28 @@ body[data-ds-dark-theme] .rt-scope-testing,.dshp-dock[data-theme="dusk"] .rt-sco
 			useEffect(() => {
 				if (!sessionId) { setInfo(null); return undefined; }
 				let cancelled = false;
+				let failures = 0;
 				const tick = () => {
 					apiJson("/dsh-purge/continue?sessionId=" + encodeURIComponent(sessionId))
-						.then((d) => { if (!cancelled && d && d.ok) setInfo(d); })
-						.catch(() => {});
+						.then((d) => {
+							if (cancelled) return;
+							failures = 0;
+							if (!d || !d.ok) return;
+							// 只在关键字段变了才 setState，避免 1.5s 一次无谓重渲染
+							setInfo((prev) => {
+								if (prev
+									&& prev.canContinue === d.canContinue
+									&& prev.continueUsed === d.continueUsed
+									&& prev.continueMax === d.continueMax
+									&& prev.continueText === d.continueText
+									&& prev.found === d.found
+									&& prev.running === d.running) {
+									return prev;
+								}
+								return d;
+							});
+						})
+						.catch(() => { failures += 1; });
 				};
 				tick();
 				const timer = window.setInterval(tick, 1500);
