@@ -1,3 +1,35 @@
+# 1.1.92
+
+## 中文
+
+- 版本 **1.1.92**。
+- **修复：删掉会话后侧栏还留着那一行，必须重启才消失**。
+  - 原因：`UiWorkspaceService.deleteSession()` 打完 `/dsh-session-delete` 只做了 `clearMain()`。宿主那边会话目录、`.corrupt-bak`、projcache、workspace 归属、pin/archive 集合都删干净了，但**浏览器内存里的会话列表 store 仍留着这条摘要** —— 于是「未分组会话」里继续显示，只有重启重拉一次才不见。
+  - 修法：删除成功后补一次 `this.sessions.handleSessionRemoved(sessionId)`，也就是宿主推送 remove 变更时走的同一条路径：`recordMutation({ kind: "remove" })` → `summaries.filter(...)` → `notifier.markDirty()` → 订阅者重渲染。点完立刻消失，幂等，不碰其它会话。
+  - 只动客户端半边；服务端删除逻辑（严格 `session-<uuid>` 校验 + 定向删目录/缓存/归属）保持原样。
+  - 标记：源码里搜 `[fix:delete-session-refresh]`。
+- **`harness` 补丁包同步**：`harness/patch/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js` 已带上该修复（233,647 → 234,292 B），`MANIFEST.txt` 重算，62 条目与 `patch/` 逐字节一致（62/62）。
+- **已知问题（平台侧，本地无解）**：`platform.deepseek.com` 的账号读取接口（`/auth-api/v0/users/current`、`/api/v0/users/get_unnotified_bonuses`）被 AWS WAF 的 JS 挑战拦截，响应是 `202 + x-amzn-waf-action: challenge`，宿主用 Node `fetch` 永远过不去。
+  - 现象：每次启动日志打 `[deepseek-account] request failed { path: '/auth-api/v0/users/current', status: 403, errorCode: 'network' }` 和 `account read failed`，账号面板/余额读不出来。
+  - 登录端点本身是通的：`POST /auth-api/v0/dsh/auth_init` / `auth_exchange` 空 body 返回 `422`（活着），所以登录链路可用，卡的是登录之后的身份/余额读取。
+  - 聊天不受影响：模型走 `api.deepseek.com` + API key，正常列出模型。
+  - **不要**把「带了 token 却收到 403」当成 token 过期去清 grant —— 那会把一条有效的登录态误删。浏览器里已经解出的 `aws-waf-token` 塞回去也过不去（挑战绑 TLS/指纹/IP），所以这不是客户端能补的洞。
+
+## English
+
+- **1.1.92**.
+- **Fix: deleting a session left the row in the sidebar until a restart.**
+  - Cause: `UiWorkspaceService.deleteSession()` called `/dsh-session-delete` and then only ran `clearMain()`. The Host really did remove the session directory, the `.corrupt-bak` salvage copy, the projcache entry, the workspace membership and the pin/archive registrations — but **the in-memory session-list store in the browser still held the summary**, so the row stayed visible under Ungrouped until a restart re-fetched the list.
+  - Fix: after a successful delete the client now calls `this.sessions.handleSessionRemoved(sessionId)` — the exact path a Host-pushed removal takes: `recordMutation({ kind: "remove" })` → `summaries.filter(...)` → `notifier.markDirty()` → subscribers re-render. The row disappears immediately; the call is idempotent and touches no other session.
+  - Client half only; the server route (strict `session-<uuid>` validation, targeted directory/cache/membership removal) is unchanged.
+  - Marker: grep `[fix:delete-session-refresh]`.
+- **`harness` patch pack synced**: `harness/patch/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js` now carries the fix (233,647 → 234,292 B); `MANIFEST.txt` was regenerated and all 62 entries match `patch/` byte-for-byte (62/62).
+- **Known issue (server side; not fixable locally)**: the account-read endpoints on `platform.deepseek.com` (`/auth-api/v0/users/current`, `/api/v0/users/get_unnotified_bonuses`) answer with an AWS WAF JS challenge (`202` + `x-amzn-waf-action: challenge`), which the Host's Node `fetch` can never satisfy.
+  - Symptom: every boot logs `[deepseek-account] request failed { path: '/auth-api/v0/users/current', status: 403, errorCode: 'network' }` plus `account read failed`; the account panel and balance stay empty.
+  - The login endpoints themselves are reachable: `POST /auth-api/v0/dsh/auth_init` and `auth_exchange` return `422` on an empty body, so signing in works — it is the identity/balance read after sign-in that is blocked.
+  - Chat is unaffected: models are served from `api.deepseek.com` with an API key and list normally.
+  - Do **not** treat "403 while an auth token was sent" as an expired token and clear the grant — that deletes a working login. Replaying a browser-solved `aws-waf-token` does not help either (the challenge is bound to TLS/fingerprint/IP), so this is not a hole the client can patch.
+
 # 1.1.91
 
 ## 中文

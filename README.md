@@ -11,7 +11,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness cybersecurity red-team tool (dsh-purge, unrestricted)</h1>
 
-<p align="center"><strong>Version 1.1.91</strong></p>
+<p align="center"><strong>Version 1.1.92</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness jailbreak: every model, swap prompts per model. Modified DSH NEXT client with auto-update disabled.</em>
@@ -52,7 +52,7 @@
 
 ## What this is
 
-**dsh-purge** is a cybersecurity red-team plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) already installed on your machine. **1.1.91** targets **DSH 0.2.1-rc.2** (0.2.0 still works). **DSH 0.2.1-rc.3 and newer RCs are not supported.** Official **Web** (`dsh web`) and the official **desktop EXE** are both supported. Install and Apply them separately.
+**dsh-purge** is a cybersecurity red-team plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) already installed on your machine. **1.1.92** targets **DSH 0.2.1-rc.2** (0.2.0 still works). **DSH 0.2.1-rc.3 and newer RCs are not supported.** Official **Web** (`dsh web`) and the official **desktop EXE** are both supported. Install and Apply them separately.
 
 Harness does more than forward a prompt. It rewrites prompts, approval gates, sandbox policy, and session migration at runtime. Asking only "will the model answer" treats a host-layer block as a model refusal. This plugin separates those two layers on your own install, for controlled evaluation and for seeing which default policy is too tight.
 
@@ -91,6 +91,12 @@ Full detail: [FORK-NOTICE.md](./FORK-NOTICE.md) and [release-notes.md](./release
 | `lib/main.js` | Patch #82: `DSH_PROFILE` falls back to `desktop` when the Explorer-launched environment lacks it |
 | 4 manual tweaks | Host start timeout 60s → 300s; sidebar default 360px / draggable to 780; sidebar padding 10/4px; `/dsh-session-delete` + right-click delete |
 
+### 1.1.92 fixes
+
+- **Deleted sessions stayed in the sidebar until a restart** — `deleteSession()` only ran `clearMain()` after the Host removed the data, so the in-memory session list kept the summary and the row remained under Ungrouped. The client now calls `this.sessions.handleSessionRemoved(sessionId)` after a successful delete, which is the same path a Host-pushed removal takes (`recordMutation({ kind: "remove" })` → `summaries.filter(...)` → `markDirty()` → re-render). The row is gone immediately. Marker: `[fix:delete-session-refresh]`.
+- **Harness pack synced** — `harness/patch/…/dsh-client-ui-workspace/lib/client.js` carries the fix (233,647 → 234,292 B) and `MANIFEST.txt` was regenerated (62/62 byte-for-byte).
+- **Known issue, server side** — the account-read endpoints on `platform.deepseek.com` are behind an AWS WAF JS challenge (`202` + `x-amzn-waf-action: challenge`), which the Host's Node `fetch` cannot satisfy. Sign-in still works (`auth_init` / `auth_exchange` answer `422` on an empty body); only the identity/balance read fails, and chat is unaffected. Details in [Troubleshooting](#troubleshooting).
+
 ### 1.1.91 fixes
 
 - **Listed but not deletable** — `allowedRoots` used `aiBase` while the scan root is `hostScanRoot(aiBase)`; backups in `app\lib` sat in the gap. Roots are now aligned with the scan root.
@@ -123,9 +129,9 @@ The client is **not** in this repository's file tree. It ships as a Release asse
 | File | Size | Use |
 |---|---|---|
 | `DSH-NEXT-2.0.19-next-unrestricted-win-x64.zip` | 416.9 MB (437,123,932 B) | **Full client.** Official `2.0.19-next` already unpacked, patches in place, auto-update disabled. Unzip and run |
-| `harness-patch-2.0.19-next.zip` | 0.91 MB (950,103 B) | Old patch set. Superseded by `harness-patch-1.1.91.zip` |
+| `harness-patch-2.0.19-next.zip` | 0.91 MB (950,103 B) | Old patch set. Superseded by `harness-patch-1.1.92.zip` |
 
-If you already run a patched `2.0.19-next`, do not re-download the full client. Take `harness-patch-1.1.91.zip` from the [v1.1.91 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.91) instead (0.93 MB, 62 files).
+If you already run a patched `2.0.19-next`, do not re-download the full client. Take `harness-patch-1.1.92.zip` from the [v1.1.92 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.92) instead (0.93 MB, 62 files).
 
 ```powershell
 # 1. Fixed location. Not Desktop, not Downloads — the host keeps profile, plugins and
@@ -158,7 +164,7 @@ SmartScreen blocks once (the package is not code-signed — neither is the offic
 
 ```powershell
 # Quit DSH NEXT completely, INCLUDING the tray icon
-Expand-Archive -Path "$env:USERPROFILE\Downloads\harness-patch-1.1.91.zip" -DestinationPath "$env:TEMP\hpatch" -Force
+Expand-Archive -Path "$env:USERPROFILE\Downloads\harness-patch-1.1.92.zip" -DestinationPath "$env:TEMP\hpatch" -Force
 cd "$env:TEMP\hpatch\harness"
 
 # Dry run first — prints the plan, touches nothing
@@ -223,7 +229,7 @@ cd "$env:USERPROFILE\.dsh\profiles\desktop"
 & "<pnpm.cmd>" add C:\path\to\dsh-purge-unrestricted
 ```
 
-Offline machines: download `dsh-purge-unrestricted-1.1.91.zip` from the [v1.1.91 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.91), unzip it, then `add` the unzipped directory as above.
+Offline machines: download `dsh-purge-unrestricted-1.1.92.zip` from the [v1.1.92 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.92), unzip it, then `add` the unzipped directory as above.
 
 ### Restart and Apply
 
@@ -441,13 +447,15 @@ dsh plugin --profile desktop remove dsh-purge
 dsh plugin --profile desktop add https://codeload.github.com/yuan-dev39/dsh-purge-unrestricted/tar.gz/refs/heads/main
 ```
 
-**`cannot determine the boot profile`.** You are on a stock client patched from Explorer. Patch #82 in `lib/main.js` sets `DSH_PROFILE=desktop` when the environment lacks it; re-apply `harness-patch-1.1.91.zip`, or set it yourself:
+**`cannot determine the boot profile`.** You are on a stock client patched from Explorer. Patch #82 in `lib/main.js` sets `DSH_PROFILE=desktop` when the environment lacks it; re-apply `harness-patch-1.1.92.zip`, or set it yourself:
 
 ```powershell
 [Environment]::SetEnvironmentVariable("DSH_PROFILE", "desktop", "User")
 ```
 
 **Apply reports files as skipped.** After a client upgrade some originals no longer match. Those files stay untouched and Apply still completes.
+
+**Account panel is empty and the log says `account read failed` / `status: 403`.** Server side, not your install. `platform.deepseek.com` puts its account-read endpoints (`/auth-api/v0/users/current`, `/api/v0/users/get_unnotified_bonuses`) behind an AWS WAF JS challenge — the response is `202` with `x-amzn-waf-action: challenge`, which a Node `fetch` can never satisfy. Sign-in itself is fine: `POST /auth-api/v0/dsh/auth_init` and `auth_exchange` return `422` on an empty body, i.e. they answer. Chat is unaffected (models come from `api.deepseek.com` with an API key). Do **not** "fix" this by treating a 403-with-token as an expired token — that clears a working login.
 
 **Plugins install but nothing changes.** Applying to the wrong host. Web and desktop are separate homes; check which `DSH_HOME` `/purge status` prints.
 

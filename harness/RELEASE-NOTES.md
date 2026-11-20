@@ -75,6 +75,36 @@ powershell -ExecutionPolicy Bypass -File .\install-modified.ps1 -Revert
 
 ---
 
+## 版本 1.1.92 增量（2026-11-20）
+
+相对上一版 harness 快照，本次只改一个文件：
+
+### 1. 删会话后侧栏立即消失
+
+`node_modules\@deepseek-ai\dsh-client-ui-workspace\lib\client.js` 的 `deleteSession()`：原来打完 `/dsh-session-delete` 只做 `clearMain()`，宿主把会话目录、`.corrupt-bak`、projcache、workspace 归属、pin/archive 都删干净了，但浏览器内存里的会话列表仍留着这条摘要 —— 「未分组会话」里继续显示，必须重启重拉才消失。
+
+删除成功后补一次 `this.sessions.handleSessionRemoved(sessionId)`，即宿主推送 remove 变更时的同一条路径：
+
+```js
+// [fix:delete-session-refresh]
+recordMutation({ kind: "remove", sessionId }) → summaries.filter(...) → notifier.markDirty() → 重渲染
+```
+
+点完立刻消失，幂等，不碰其它会话。服务端删除逻辑未改。
+
+### 2. MANIFEST 重算
+
+62 条目逐文件 sha256 重新生成，当前与 `harness/patch/` 逐字节一致（62/62）。
+
+### 3. 校验
+
+```
+harness/patch/node_modules/@deepseek-ai/dsh-client-ui-workspace/lib/client.js   234,292 B
+sha256  6B75F885A4E274695C24C9ABFA2F5E38C8BEA01AEB5131858E7206731D2EA470
+```
+
+---
+
 ## 版本 1.1.91 增量（2026-11-18）
 
 相对上一版 harness 快照，本次新增：
@@ -194,7 +224,7 @@ OK  沙箱补丁存在            （dsh-sandbox 含 dsh-purge 标记）
 | DSH NEXT | `2.0.19-next` |
 | 宿主内核 | `@deepseek-ai/dsh` `0.2.1-rc.2` |
 | 内置 Node / Python / pnpm | `24.21.0` / `3.12.14` / `11.8.0` |
-| dsh-purge | `1.1.90`（unrestricted fork） |
+| dsh-purge | `1.1.92`（unrestricted fork） |
 | 平台 | Windows x64 |
 
 ## 声明

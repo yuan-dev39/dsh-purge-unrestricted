@@ -11,7 +11,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness レッドチームツール（dsh-purge 無制限版）</h1>
 
-<p align="center"><strong>バージョン 1.1.91</strong></p>
+<p align="center"><strong>バージョン 1.1.92</strong></p>
 
 <p align="center">
   <a href="https://github.com/yuan-dev39/dsh-purge-unrestricted/stargazers"><img src="https://img.shields.io/github/stars/yuan-dev39/dsh-purge-unrestricted?logo=github&label=Stars" alt="GitHub stars"></a>
@@ -47,7 +47,7 @@
 
 ## これは何か
 
-**dsh-purge** は、お使いのマシンにすでにインストールされている[公式 DeepSeek Harness](https://www.deepseek.com/harness/) 向けのレッドチームプラグインです。**1.1.91** は **DSH 0.2.1-rc.2** を対象とします（0.2.0 でも動作）。**DSH 0.2.1-rc.3 以降の RC は非対応。** 公式 **Web**（`dsh web`）と公式**デスクトップ EXE** の両方に対応。インストールと Apply はホストごとに別々に行います。
+**dsh-purge** は、お使いのマシンにすでにインストールされている[公式 DeepSeek Harness](https://www.deepseek.com/harness/) 向けのレッドチームプラグインです。**1.1.92** は **DSH 0.2.1-rc.2** を対象とします（0.2.0 でも動作）。**DSH 0.2.1-rc.3 以降の RC は非対応。** 公式 **Web**（`dsh web`）と公式**デスクトップ EXE** の両方に対応。インストールと Apply はホストごとに別々に行います。
 
 Harness はプロンプトを転送するだけではありません。実行時にプロンプト、承認ゲート、サンドボックスポリシー、セッション移行を書き換えます。「モデルが答えるか」だけを見ると、ホスト層のブロックをモデルの拒否と誤認します。本プラグインはその 2 層を手元のインストール上で分離し、統制された評価と、どの既定ポリシーが厳しすぎるかの確認を可能にします。
 
@@ -86,6 +86,12 @@ Harness はプロンプトを転送するだけではありません。実行時
 | `lib/main.js` | パッチ #82：エクスプローラ起動時に `DSH_PROFILE` が無ければ `desktop` にフォールバック |
 | 手動調整 4 点 | ホスト起動タイムアウト 60s → 300s、サイドバー既定 360px・最大 780 までドラッグ可、サイドバー余白 10/4px、`/dsh-session-delete` と右クリック削除を追加 |
 
+### 1.1.92 の修正
+
+- **削除したセッションがサイドバーに残り、再起動するまで消えない** —— `deleteSession()` はホストがデータを消した後に `clearMain()` しか呼んでおらず、メモリ上のセッション一覧には要約が残ったままだった。そのため行は「未分類」に表示され続けた。削除成功後に `this.sessions.handleSessionRemoved(sessionId)` を呼ぶようにした。これはホストが remove 変更を push する時と同じ経路（`recordMutation({ kind: "remove" })` → `summaries.filter(...)` → `markDirty()` → 再描画）で、クリック直後に行が消える。マーカー: `[fix:delete-session-refresh]`。
+- **harness パッチパック同期** —— `harness/patch/…/dsh-client-ui-workspace/lib/client.js` に修正を反映（233,647 → 234,292 B）、`MANIFEST.txt` を再計算し、62 エントリが `patch/` とバイト単位で一致（62/62）。
+- **既知の問題（サーバー側）** —— `platform.deepseek.com` のアカウント読み取りエンドポイントは AWS WAF の JS チャレンジの背後にあり（`202` + `x-amzn-waf-action: challenge`）、ホストの Node `fetch` では突破できない。サインイン自体は可能（`auth_init` / `auth_exchange` は空 body で `422` を返す）。ブロックされるのはサインイン後の身元・残高読み取りのみで、チャットには影響しない。詳細は[トラブルシューティング](#トラブルシューティング)。
+
 ### 1.1.91 の修正
 
 - **一覧に出るのに削除できない** —— `allowedRoots` は `aiBase`、走査ルートは `hostScanRoot(aiBase)`。`app\lib` 配下のバックアップが隙間に落ちていた。許可ルートを走査ルートに揃えた。
@@ -118,9 +124,9 @@ Node と pnpm は**クライアントに同梱**されています。別途イ�
 | ファイル | サイズ | 用途 |
 |---|---|---|
 | `DSH-NEXT-2.0.19-next-unrestricted-win-x64.zip` | 416.9 MB (437,123,932 B) | **クライアント一式。** 公式 `2.0.19-next` を解凍済み、パッチ適用済み、自動更新オフ。解凍して実行するだけ |
-| `harness-patch-2.0.19-next.zip` | 0.91 MB (950,103 B) | 旧パッチ集。`harness-patch-1.1.91.zip` に置き換え済み |
+| `harness-patch-2.0.19-next.zip` | 0.91 MB (950,103 B) | 旧パッチ集。`harness-patch-1.1.92.zip` に置き換え済み |
 
-すでにパッチ適用済みの `2.0.19-next` を動かしている場合、一式を再取得する必要はありません。[v1.1.91 リリース](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.91) の `harness-patch-1.1.91.zip`（0.93 MB、62 ファイル）を使ってください。
+すでにパッチ適用済みの `2.0.19-next` を動かしている場合、一式を再取得する必要はありません。[v1.1.92 リリース](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.92) の `harness-patch-1.1.92.zip`（0.93 MB、62 ファイル）を使ってください。
 
 ```powershell
 # 1. 固定の場所に置く。デスクトップやダウンロードは不可——ホストは
@@ -153,7 +159,7 @@ SmartScreen が 1 回ブロックします（本パッケージはコード署�
 
 ```powershell
 # DSH NEXT を完全終了させる。トレイアイコンも含む
-Expand-Archive -Path "$env:USERPROFILE\Downloads\harness-patch-1.1.91.zip" -DestinationPath "$env:TEMP\hpatch" -Force
+Expand-Archive -Path "$env:USERPROFILE\Downloads\harness-patch-1.1.92.zip" -DestinationPath "$env:TEMP\hpatch" -Force
 cd "$env:TEMP\hpatch\harness"
 
 # まず dry run：計画を表示するだけで、ファイルには触れない
@@ -218,7 +224,7 @@ cd "$env:USERPROFILE\.dsh\profiles\desktop"
 & "<pnpm.cmd>" add C:\path\to\dsh-purge-unrestricted
 ```
 
-オフライン環境：[v1.1.91 リリース](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.91) の `dsh-purge-unrestricted-1.1.91.zip` をダウンロードし、解凍したディレクトリを上記の方法で `add` します。
+オフライン環境：[v1.1.92 リリース](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.92) の `dsh-purge-unrestricted-1.1.92.zip` をダウンロードし、解凍したディレクトリを上記の方法で `add` します。
 
 ### 再起動と Apply
 
@@ -436,13 +442,15 @@ dsh plugin --profile desktop remove dsh-purge
 dsh plugin --profile desktop add https://codeload.github.com/yuan-dev39/dsh-purge-unrestricted/tar.gz/refs/heads/main
 ```
 
-**`cannot determine the boot profile`。** 原版クライアントをエクスプローラから起動しています。`lib/main.js` のパッチ #82 は環境変数が無いとき `DSH_PROFILE=desktop` を補います。`harness-patch-1.1.91.zip` を再適用するか、自分で設定してください：
+**`cannot determine the boot profile`。** 原版クライアントをエクスプローラから起動しています。`lib/main.js` のパッチ #82 は環境変数が無いとき `DSH_PROFILE=desktop` を補います。`harness-patch-1.1.92.zip` を再適用するか、自分で設定してください：
 
 ```powershell
 [Environment]::SetEnvironmentVariable("DSH_PROFILE", "desktop", "User")
 ```
 
 **Apply が一部ファイルを skipped と報告する。** クライアント更新後に元ファイルが一致しなくなっています。それらは変更されず、Apply 自体は完了します。
+
+**アカウントパネルが空で、ログに `account read failed` / `status: 403` が出る。** これはサーバー側の問題で、インストール不良ではありません。`platform.deepseek.com` はアカウント読み取りエンドポイント（`/auth-api/v0/users/current`、`/api/v0/users/get_unnotified_bonuses`）を AWS WAF の JS チャレンジの背後に置いており、応答は `202` と `x-amzn-waf-action: challenge` です。Node の `fetch` では突破できません。サインイン自体は正常です（`POST /auth-api/v0/dsh/auth_init` と `auth_exchange` は空 body で `422` = 応答あり）。チャットには影響しません（モデルは `api.deepseek.com` + API キー経由）。「トークンを送って 403 なら期限切れ」と判断して grant を消す"修正"はしないでください —— 有効なログイン状態を消してしまいます。
 
 **プラグインは入ったが何も変わらない。** 別のホストに Apply しています。Web とデスクトップは別々の home です。`/purge status` が出力する `DSH_HOME` を確認してください。
 

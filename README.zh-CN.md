@@ -10,7 +10,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness 红队工具（dsh-purge 无限制版）</h1>
 
-<p align="center"><strong>版本 1.1.91</strong></p>
+<p align="center"><strong>版本 1.1.92</strong></p>
 
 <p align="center">
   <a href="https://github.com/yuan-dev39/dsh-purge-unrestricted/stargazers"><img src="https://img.shields.io/github/stars/yuan-dev39/dsh-purge-unrestricted?logo=github&label=Stars" alt="GitHub stars"></a>
@@ -46,7 +46,7 @@
 
 ## 这是什么
 
-**dsh-purge** 是给本机已安装的[官方 DeepSeek Harness](https://www.deepseek.com/harness/) 用的红队插件。**1.1.91** 面向 **DSH 0.2.1-rc.2**（0.2.0 亦可）。**不支持 DSH 0.2.1-rc.3 及更新的 RC。** 官方 **Web**（`dsh web`）与官方**桌面 EXE** 都支持，两者分开安装、分开 Apply。
+**dsh-purge** 是给本机已安装的[官方 DeepSeek Harness](https://www.deepseek.com/harness/) 用的红队插件。**1.1.92** 面向 **DSH 0.2.1-rc.2**（0.2.0 亦可）。**不支持 DSH 0.2.1-rc.3 及更新的 RC。** 官方 **Web**（`dsh web`）与官方**桌面 EXE** 都支持，两者分开安装、分开 Apply。
 
 Harness 不只是转发提示词，它在运行时会重写提示词、审批闸门、沙箱策略与会话迁移。只问「模型会不会答」会把宿主层的拦截误判成模型拒答。本插件在你的本机上把这两层拆开，用于受控评测，以及看清哪条默认策略过紧。
 
@@ -85,6 +85,12 @@ Harness 不只是转发提示词，它在运行时会重写提示词、审批闸
 | `lib/main.js` | 补丁 #82：从资源管理器启动、环境缺 `DSH_PROFILE` 时兜底 `desktop` |
 | 4 处手工微调 | 宿主启动超时 60s → 300s；侧栏默认 360px、可拖到 780；侧栏内边距 10/4px；新增 `/dsh-session-delete` 与右键删除会话 |
 
+### 1.1.92 修复
+
+- **删掉的会话还留在侧栏，必须重启才消失** —— `deleteSession()` 在宿主删完数据后只跑了 `clearMain()`，内存里的会话列表仍留着这条摘要，于是行继续挂在「未分组」下面。现在删除成功后补一次 `this.sessions.handleSessionRemoved(sessionId)`，也就是宿主推送 remove 变更时走的同一条路径（`recordMutation({ kind: "remove" })` → `summaries.filter(...)` → `markDirty()` → 重渲染），点完立刻消失。标记：`[fix:delete-session-refresh]`。
+- **harness 补丁包同步** —— `harness/patch/…/dsh-client-ui-workspace/lib/client.js` 带上该修复（233,647 → 234,292 B），`MANIFEST.txt` 重算，62 条目与 `patch/` 逐字节一致（62/62）。
+- **已知问题（平台侧）** —— `platform.deepseek.com` 的账号读取接口在 AWS WAF 的 JS 挑战后面（`202` + `x-amzn-waf-action: challenge`），宿主的 Node `fetch` 过不去。登录本身可用（`auth_init` / `auth_exchange` 空 body 返回 `422`），卡的只是登录后的身份/余额读取，聊天不受影响。详见[故障排查](#故障排查)。
+
 ### 1.1.91 修复
 
 - **列得出来删不掉** —— `allowedRoots` 用 `aiBase`，扫描根却是 `hostScanRoot(aiBase)`，`app\lib` 下的备份掉进缝隙。允许根已与扫描根对齐。
@@ -117,9 +123,9 @@ Node 与 pnpm **随客户端自带**，不需要另装。
 | 文件 | 大小 | 用途 |
 |---|---|---|
 | `DSH-NEXT-2.0.19-next-unrestricted-win-x64.zip` | 416.9 MB (437,123,932 B) | **整包客户端。** 官方 `2.0.19-next` 已解包、补丁已就位、自动更新已关。解压即用 |
-| `harness-patch-2.0.19-next.zip` | 0.91 MB (950,103 B) | 旧补丁集，已被 `harness-patch-1.1.91.zip` 取代 |
+| `harness-patch-2.0.19-next.zip` | 0.91 MB (950,103 B) | 旧补丁集，已被 `harness-patch-1.1.92.zip` 取代 |
 
-已经跑着打过补丁的 `2.0.19-next` 不必重下整包，直接取 [v1.1.91 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.91) 里的 `harness-patch-1.1.91.zip`（0.93 MB，62 个文件）。
+已经跑着打过补丁的 `2.0.19-next` 不必重下整包，直接取 [v1.1.92 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.92) 里的 `harness-patch-1.1.92.zip`（0.93 MB，62 个文件）。
 
 ```powershell
 # 1. 固定位置。别放桌面或下载目录——宿主把 profile、插件、会话都记在这条路径下
@@ -151,7 +157,7 @@ SmartScreen 会拦一次（本包未做代码签名，官方包也没做），�
 
 ```powershell
 # 先完全退出 DSH NEXT，包括托盘图标
-Expand-Archive -Path "$env:USERPROFILE\Downloads\harness-patch-1.1.91.zip" -DestinationPath "$env:TEMP\hpatch" -Force
+Expand-Archive -Path "$env:USERPROFILE\Downloads\harness-patch-1.1.92.zip" -DestinationPath "$env:TEMP\hpatch" -Force
 cd "$env:TEMP\hpatch\harness"
 
 # 先 dry run：只打印计划，不动文件
@@ -216,7 +222,7 @@ cd "$env:USERPROFILE\.dsh\profiles\desktop"
 & "<pnpm.cmd>" add C:\path\to\dsh-purge-unrestricted
 ```
 
-离线机器：[v1.1.91 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.91) 下 `dsh-purge-unrestricted-1.1.91.zip`，解压后按上面的方式 `add` 解压出来的目录。
+离线机器：[v1.1.92 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.92) 下 `dsh-purge-unrestricted-1.1.92.zip`，解压后按上面的方式 `add` 解压出来的目录。
 
 ### 重启并 Apply
 
@@ -433,13 +439,15 @@ dsh plugin --profile desktop remove dsh-purge
 dsh plugin --profile desktop add https://codeload.github.com/yuan-dev39/dsh-purge-unrestricted/tar.gz/refs/heads/main
 ```
 
-**`cannot determine the boot profile`。** 说明你在用原版客户端从资源管理器启动。`lib/main.js` 里的补丁 #82 会在环境缺变量时补 `DSH_PROFILE=desktop`；重打一次 `harness-patch-1.1.91.zip`，或自己设：
+**`cannot determine the boot profile`。** 说明你在用原版客户端从资源管理器启动。`lib/main.js` 里的补丁 #82 会在环境缺变量时补 `DSH_PROFILE=desktop`；重打一次 `harness-patch-1.1.92.zip`，或自己设：
 
 ```powershell
 [Environment]::SetEnvironmentVariable("DSH_PROFILE", "desktop", "User")
 ```
 
 **Apply 报告部分文件 skipped。** 客户端升级后部分原件不再匹配。这些文件保持不动，Apply 仍会完成。
+
+**账号面板空着，日志里是 `account read failed` / `status: 403`。** 这是平台侧，不是你装坏了。`platform.deepseek.com` 把账号读取接口（`/auth-api/v0/users/current`、`/api/v0/users/get_unnotified_bonuses`）放在 AWS WAF 的 JS 挑战后面 —— 响应是 `202` 加 `x-amzn-waf-action: challenge`，Node 的 `fetch` 永远解不出来。登录本身没问题：`POST /auth-api/v0/dsh/auth_init` 和 `auth_exchange` 空 body 会返回 `422`，说明端点活着。聊天不受影响（模型走 `api.deepseek.com` + API key）。**别**用「带了 token 却 403 就当过期、清 grant」去"修"它 —— 那会把一条有效登录态删掉。
 
 **插件装上了但没生效。** Apply 打到了另一个宿主。Web 与桌面是两个 home，看 `/purge status` 打印的 `DSH_HOME`。
 
