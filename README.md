@@ -11,7 +11,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness cybersecurity red-team tool (dsh-purge, unrestricted)</h1>
 
-<p align="center"><strong>Version 1.1.92</strong></p>
+<p align="center"><strong>Version 1.1.93</strong></p>
 
 <p align="center">
   <em>DeepSeek Harness jailbreak: every model, swap prompts per model. Modified DSH NEXT client with auto-update disabled.</em>
@@ -52,7 +52,7 @@
 
 ## What this is
 
-**dsh-purge** is a cybersecurity red-team plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) already installed on your machine. **1.1.92** targets **DSH 0.2.1-rc.2** (0.2.0 still works). **DSH 0.2.1-rc.3 and newer RCs are not supported.** Official **Web** (`dsh web`) and the official **desktop EXE** are both supported. Install and Apply them separately.
+**dsh-purge** is a cybersecurity red-team plugin for the official [DeepSeek Harness](https://www.deepseek.com/harness/) already installed on your machine. **1.1.93** targets **DSH 0.2.1-rc.2** (0.2.0 still works). **DSH 0.2.1-rc.3 and newer RCs are not supported.** Official **Web** (`dsh web`) and the official **desktop EXE** are both supported. Install and Apply them separately.
 
 Harness does more than forward a prompt. It rewrites prompts, approval gates, sandbox policy, and session migration at runtime. Asking only "will the model answer" treats a host-layer block as a model refusal. This plugin separates those two layers on your own install, for controlled evaluation and for seeing which default policy is too tight.
 
@@ -90,6 +90,12 @@ Full detail: [FORK-NOTICE.md](./FORK-NOTICE.md) and [release-notes.md](./release
 | `lib/main.js` | `DesktopUpdateCoordinator.start()` / `check()` short-circuited — no request to `https://www.dshdesktop.cn/api/desktop/version`, "check for updates" reports "already current", a new build never overwrites your patched files |
 | `lib/main.js` | Patch #82: `DSH_PROFILE` falls back to `desktop` when the Explorer-launched environment lacks it |
 | 4 manual tweaks | Host start timeout 60s → 300s; sidebar default 360px / draggable to 780; sidebar padding 10/4px; `/dsh-session-delete` + right-click delete |
+
+### 1.1.93 fixes
+
+- **Bundle release** — this tag carries the plugin, the modified-host patch pack, and (new) the `dsh-browser-control` module plus its Chrome extension, so one release page has everything.
+- **`#82 DESKTOP_SHELL_PROFILE_FALLBACK` no longer sticks in pending** — the marker is the `[dsh-purge-82] …继承 env 时常缺 DSH_PROFILE` comment in `main.js`. Builds upgraded from 1.1.90 carry the older 「时**缺少**」 wording, which never matches. `harness/patch/lib/main.js` ships the canonical text; on a live install, change `继承 env 时缺少` → `继承 env 时常缺`.
+- Same delete-session fix as 1.1.92 below — the harness pack in this release contains it.
 
 ### 1.1.92 fixes
 
@@ -129,9 +135,10 @@ The client is **not** in this repository's file tree. It ships as a Release asse
 | File | Size | Use |
 |---|---|---|
 | `DSH-NEXT-2.0.19-next-unrestricted-win-x64.zip` | 416.9 MB (437,123,932 B) | **Full client.** Official `2.0.19-next` already unpacked, patches in place, auto-update disabled. Unzip and run |
-| `harness-patch-2.0.19-next.zip` | 0.91 MB (950,103 B) | Old patch set. Superseded by `harness-patch-1.1.92.zip` |
+| `harness-patch-2.0.19-next.zip` | 0.91 MB (950,103 B) | Old patch set. Superseded by `harness-patch-1.1.93.zip` |
+| `dsh-browser-control-1.7.14.zip` | 0.24 MB (248,235 B) | **Browser control.** `@angelky7/dsh-browser-control` 1.7.14 host module + matching Chrome MV3 extension 1.7.5 + `CONFIG.md`. Both halves are required |
 
-If you already run a patched `2.0.19-next`, do not re-download the full client. Take `harness-patch-1.1.92.zip` from the [v1.1.92 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.92) instead (0.93 MB, 62 files).
+If you already run a patched `2.0.19-next`, do not re-download the full client. Take `harness-patch-1.1.93.zip` from the [v1.1.93 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.93) instead (0.93 MB, 62 files).
 
 ```powershell
 # 1. Fixed location. Not Desktop, not Downloads — the host keeps profile, plugins and
@@ -164,7 +171,7 @@ SmartScreen blocks once (the package is not code-signed — neither is the offic
 
 ```powershell
 # Quit DSH NEXT completely, INCLUDING the tray icon
-Expand-Archive -Path "$env:USERPROFILE\Downloads\harness-patch-1.1.92.zip" -DestinationPath "$env:TEMP\hpatch" -Force
+Expand-Archive -Path "$env:USERPROFILE\Downloads\harness-patch-1.1.93.zip" -DestinationPath "$env:TEMP\hpatch" -Force
 cd "$env:TEMP\hpatch\harness"
 
 # Dry run first — prints the plan, touches nothing
@@ -229,7 +236,7 @@ cd "$env:USERPROFILE\.dsh\profiles\desktop"
 & "<pnpm.cmd>" add C:\path\to\dsh-purge-unrestricted
 ```
 
-Offline machines: download `dsh-purge-unrestricted-1.1.92.zip` from the [v1.1.92 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.92), unzip it, then `add` the unzipped directory as above.
+Offline machines: download `dsh-purge-unrestricted-1.1.93.zip` from the [v1.1.93 release](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.93), unzip it, then `add` the unzipped directory as above.
 
 ### Restart and Apply
 
@@ -447,7 +454,7 @@ dsh plugin --profile desktop remove dsh-purge
 dsh plugin --profile desktop add https://codeload.github.com/yuan-dev39/dsh-purge-unrestricted/tar.gz/refs/heads/main
 ```
 
-**`cannot determine the boot profile`.** You are on a stock client patched from Explorer. Patch #82 in `lib/main.js` sets `DSH_PROFILE=desktop` when the environment lacks it; re-apply `harness-patch-1.1.92.zip`, or set it yourself:
+**`cannot determine the boot profile`.** You are on a stock client patched from Explorer. Patch #82 in `lib/main.js` sets `DSH_PROFILE=desktop` when the environment lacks it; re-apply `harness-patch-1.1.93.zip`, or set it yourself:
 
 ```powershell
 [Environment]::SetEnvironmentVariable("DSH_PROFILE", "desktop", "User")

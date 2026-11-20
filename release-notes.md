@@ -1,3 +1,53 @@
+# 1.1.93
+
+## 中文
+
+- 版本 **1.1.93**（打包版：补丁、插件、浏览器控制模块一次带齐）。
+- **修复：删掉会话后侧栏还留着那一行，必须重启才消失。**
+  - 原因：`UiWorkspaceService.deleteSession()` 打完 `/dsh-session-delete` 只做了 `clearMain()`。宿主那边会话目录、`.corrupt-bak`、projcache、workspace 归属、pin/archive 集合都删干净了，但**浏览器内存里的会话列表 store 仍留着这条摘要** —— 于是「未分组会话」里继续显示，只有重启重拉一次才不见。
+  - 修法：删除成功后补一次 `this.sessions.handleSessionRemoved(sessionId)`，即宿主推送 remove 变更时的同一条路径：`recordMutation({ kind: "remove" })` → `summaries.filter(...)` → `notifier.markDirty()` → 订阅者重渲染。点完立刻消失，幂等，不碰其它会话。
+  - 标记：源码里搜 `[fix:delete-session-refresh]`；只动客户端半边，服务端删除逻辑不变。
+- **修复：`#82 DESKTOP_SHELL_PROFILE_FALLBACK` 被判成 pending。** 判据是 `main.js` 里的注释文案 `[dsh-purge-82] …继承 env 时常缺 DSH_PROFILE`。从 1.1.90 升上来的机器上，运行期打进 `main.js` 的旧文案是「时**缺少**」，和 1.1.91+ 的 marker 差一个词序，于是补丁永远挂在 pending。本版 `harness/patch/lib/main.js` 用规范文案；已在跑的机器把 `继承 env 时缺少` 改成 `继承 env 时常缺` 即可（改完 `node --check` 应通过）。
+- **harness 补丁包同步**：`harness/patch/…/dsh-client-ui-workspace/lib/client.js` 带上删会话修复（233,647 → 234,292 B），`MANIFEST.txt` 重算，62 条目与 `patch/` 逐字节一致（62/62）。
+
+### 附件
+
+| 文件 | 内容 |
+|---|---|
+| `dsh-purge-unrestricted-1.1.93.zip` | 插件本体（源码树，即本仓库 `main`） |
+| `harness-patch-1.1.93.zip` | 魔改宿主补丁包：62 个改版后的 `resources\app\` 文件 + `MANIFEST.txt` + `install-modified.ps1` |
+| `dsh-browser-control-1.7.14.zip` | **新增**。`@angelky7/dsh-browser-control` 1.7.14 宿主模块 + 配套 Chrome MV3 扩展 1.7.5 + 配置说明（`CONFIG.md`）。两半要一起装才通 |
+
+### 已知问题（平台侧，本地无解）
+
+- `platform.deepseek.com` 的账号读取接口（`/auth-api/v0/users/current`、`/api/v0/users/get_unnotified_bonuses`）在 AWS WAF 的 JS 挑战后面：响应是 `202 + x-amzn-waf-action: challenge`，宿主用 Node `fetch` 永远过不去。日志每次启动打 `[deepseek-account] request failed { … status: 403 }` 和 `account read failed`，账号面板/余额是空的。
+- 登录端点本身正常（`POST /auth-api/v0/dsh/auth_init` / `auth_exchange` 空 body 返回 `422`），聊天走 `api.deepseek.com` + API key 不受影响。
+- **不要**把「带了 token 却收到 403」当成 token 过期去清 grant —— 那会把一条有效登录态误删。
+
+## English
+
+- **1.1.93** (bundle release: patches, plugin and the browser-control module in one place).
+- **Fix: deleting a session left the row in the sidebar until a restart.**
+  - Cause: `UiWorkspaceService.deleteSession()` called `/dsh-session-delete` and then only ran `clearMain()`. The Host removed the session directory, the `.corrupt-bak` salvage copy, the projcache entry, the workspace membership and the pin/archive registrations — but **the in-memory session-list store in the browser still held the summary**, so the row stayed under Ungrouped until a restart re-fetched the list.
+  - Fix: after a successful delete the client calls `this.sessions.handleSessionRemoved(sessionId)` — the same path a Host-pushed removal takes (`recordMutation({ kind: "remove" })` → `summaries.filter(...)` → `notifier.markDirty()` → re-render). The row is gone immediately; idempotent; no other session touched.
+  - Marker: grep `[fix:delete-session-refresh]`. Client half only; the server route is unchanged.
+- **Fix: `#82 DESKTOP_SHELL_PROFILE_FALLBACK` stuck in pending.** The marker is the comment `[dsh-purge-82] …继承 env 时常缺 DSH_PROFILE` inside `main.js`. Machines upgraded from 1.1.90 carry the older wording 「时**缺少**」, one word order away from the 1.1.91+ marker, so the patch could never be recognised. This release ships the canonical wording in `harness/patch/lib/main.js`; on a live install, change `继承 env 时缺少` to `继承 env 时常缺` (then `node --check` must still pass).
+- **Harness pack synced**: `harness/patch/…/dsh-client-ui-workspace/lib/client.js` carries the delete fix (233,647 → 234,292 B); `MANIFEST.txt` regenerated, all 62 entries match `patch/` byte-for-byte.
+
+### Assets
+
+| File | Contents |
+|---|---|
+| `dsh-purge-unrestricted-1.1.93.zip` | The plugin itself (source tree, i.e. this repository's `main`) |
+| `harness-patch-1.1.93.zip` | Modified-host patch pack: 62 patched `resources\app\` files + `MANIFEST.txt` + `install-modified.ps1` |
+| `dsh-browser-control-1.7.14.zip` | **New.** `@angelky7/dsh-browser-control` 1.7.14 host module + matching Chrome MV3 extension 1.7.5 + config notes (`CONFIG.md`). Both halves are required |
+
+### Known issue (server side; not fixable locally)
+
+- The account-read endpoints on `platform.deepseek.com` (`/auth-api/v0/users/current`, `/api/v0/users/get_unnotified_bonuses`) sit behind an AWS WAF JS challenge: the answer is `202 + x-amzn-waf-action: challenge`, which the Host's Node `fetch` can never satisfy. Every boot logs `[deepseek-account] request failed { … status: 403 }` and `account read failed`; the account panel and balance stay empty.
+- Sign-in itself works (`POST /auth-api/v0/dsh/auth_init` / `auth_exchange` return `422` on an empty body), and chat is unaffected (models come from `api.deepseek.com` with an API key).
+- Do **not** treat "403 while an auth token was sent" as an expired token and clear the grant — that deletes a working login.
+
 # 1.1.92
 
 ## 中文

@@ -224,7 +224,7 @@ OK  沙箱补丁存在            （dsh-sandbox 含 dsh-purge 标记）
 | DSH NEXT | `2.0.19-next` |
 | 宿主内核 | `@deepseek-ai/dsh` `0.2.1-rc.2` |
 | 内置 Node / Python / pnpm | `24.21.0` / `3.12.14` / `11.8.0` |
-| dsh-purge | `1.1.92`（unrestricted fork） |
+| dsh-purge | `1.1.93`（unrestricted fork） |
 | 平台 | Windows x64 |
 
 ## 声明

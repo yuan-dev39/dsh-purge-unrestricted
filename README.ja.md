@@ -11,7 +11,7 @@
 
 <h1 align="center">⚔️ DeepSeek Harness レッドチームツール（dsh-purge 無制限版）</h1>
 
-<p align="center"><strong>バージョン 1.1.92</strong></p>
+<p align="center"><strong>バージョン 1.1.93</strong></p>
 
 <p align="center">
   <a href="https://github.com/yuan-dev39/dsh-purge-unrestricted/stargazers"><img src="https://img.shields.io/github/stars/yuan-dev39/dsh-purge-unrestricted?logo=github&label=Stars" alt="GitHub stars"></a>
@@ -47,7 +47,7 @@
 
 ## これは何か
 
-**dsh-purge** は、お使いのマシンにすでにインストールされている[公式 DeepSeek Harness](https://www.deepseek.com/harness/) 向けのレッドチームプラグインです。**1.1.92** は **DSH 0.2.1-rc.2** を対象とします（0.2.0 でも動作）。**DSH 0.2.1-rc.3 以降の RC は非対応。** 公式 **Web**（`dsh web`）と公式**デスクトップ EXE** の両方に対応。インストールと Apply はホストごとに別々に行います。
+**dsh-purge** は、お使いのマシンにすでにインストールされている[公式 DeepSeek Harness](https://www.deepseek.com/harness/) 向けのレッドチームプラグインです。**1.1.93** は **DSH 0.2.1-rc.2** を対象とします（0.2.0 でも動作）。**DSH 0.2.1-rc.3 以降の RC は非対応。** 公式 **Web**（`dsh web`）と公式**デスクトップ EXE** の両方に対応。インストールと Apply はホストごとに別々に行います。
 
 Harness はプロンプトを転送するだけではありません。実行時にプロンプト、承認ゲート、サンドボックスポリシー、セッション移行を書き換えます。「モデルが答えるか」だけを見ると、ホスト層のブロックをモデルの拒否と誤認します。本プラグインはその 2 層を手元のインストール上で分離し、統制された評価と、どの既定ポリシーが厳しすぎるかの確認を可能にします。
 
@@ -85,6 +85,12 @@ Harness はプロンプトを転送するだけではありません。実行時
 | `lib/main.js` | `DesktopUpdateCoordinator.start()` / `check()` を短絡——`https://www.dshdesktop.cn/api/desktop/version` への通信を停止。「更新を確認」は「最新です」とだけ返し、新しいビルドが改変済みファイルを上書きしない |
 | `lib/main.js` | パッチ #82：エクスプローラ起動時に `DSH_PROFILE` が無ければ `desktop` にフォールバック |
 | 手動調整 4 点 | ホスト起動タイムアウト 60s → 300s、サイドバー既定 360px・最大 780 までドラッグ可、サイドバー余白 10/4px、`/dsh-session-delete` と右クリック削除を追加 |
+
+### 1.1.93 の修正
+
+- **バンドルリリース** —— この tag はプラグイン本体、改造ホスト用パッチパック、そして（新規）`dsh-browser-control` モジュールと対応 Chrome 拡張をまとめて配布します。
+- **`#82 DESKTOP_SHELL_PROFILE_FALLBACK` が pending のままにならない** —— 判定は `main.js` 内のコメント `[dsh-purge-82] …継承 env 时常缺 DSH_PROFILE`。1.1.90 から更新した環境には旧文言「时**缺少**」が残り、永久に一致しません。`harness/patch/lib/main.js` は正規の文言を同梱しています。稼働中の環境では `继承 env 时缺少` を `继承 env 时常缺` に変更してください。
+- セッション削除の修正は下記 1.1.92 と同じ内容で、本版のパッチパックに含まれています。
 
 ### 1.1.92 の修正
 
@@ -124,9 +130,10 @@ Node と pnpm は**クライアントに同梱**されています。別途イ�
 | ファイル | サイズ | 用途 |
 |---|---|---|
 | `DSH-NEXT-2.0.19-next-unrestricted-win-x64.zip` | 416.9 MB (437,123,932 B) | **クライアント一式。** 公式 `2.0.19-next` を解凍済み、パッチ適用済み、自動更新オフ。解凍して実行するだけ |
-| `harness-patch-2.0.19-next.zip` | 0.91 MB (950,103 B) | 旧パッチ集。`harness-patch-1.1.92.zip` に置き換え済み |
+| `harness-patch-2.0.19-next.zip` | 0.91 MB (950,103 B) | 旧パッチ集。`harness-patch-1.1.93.zip` に置き換え済み |
+| `dsh-browser-control-1.7.14.zip` | 0.24 MB (248,235 B) | **ブラウザ制御。** `@angelky7/dsh-browser-control` 1.7.14 ホストモジュール + 対応 Chrome MV3 拡張 1.7.5 + `CONFIG.md`。両方必要 |
 
-すでにパッチ適用済みの `2.0.19-next` を動かしている場合、一式を再取得する必要はありません。[v1.1.92 リリース](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.92) の `harness-patch-1.1.92.zip`（0.93 MB、62 ファイル）を使ってください。
+すでにパッチ適用済みの `2.0.19-next` を動かしている場合、一式を再取得する必要はありません。[v1.1.93 リリース](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.93) の `harness-patch-1.1.93.zip`（0.93 MB、62 ファイル）を使ってください。
 
 ```powershell
 # 1. 固定の場所に置く。デスクトップやダウンロードは不可——ホストは
@@ -159,7 +166,7 @@ SmartScreen が 1 回ブロックします（本パッケージはコード署�
 
 ```powershell
 # DSH NEXT を完全終了させる。トレイアイコンも含む
-Expand-Archive -Path "$env:USERPROFILE\Downloads\harness-patch-1.1.92.zip" -DestinationPath "$env:TEMP\hpatch" -Force
+Expand-Archive -Path "$env:USERPROFILE\Downloads\harness-patch-1.1.93.zip" -DestinationPath "$env:TEMP\hpatch" -Force
 cd "$env:TEMP\hpatch\harness"
 
 # まず dry run：計画を表示するだけで、ファイルには触れない
@@ -224,7 +231,7 @@ cd "$env:USERPROFILE\.dsh\profiles\desktop"
 & "<pnpm.cmd>" add C:\path\to\dsh-purge-unrestricted
 ```
 
-オフライン環境：[v1.1.92 リリース](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.92) の `dsh-purge-unrestricted-1.1.92.zip` をダウンロードし、解凍したディレクトリを上記の方法で `add` します。
+オフライン環境：[v1.1.93 リリース](https://github.com/yuan-dev39/dsh-purge-unrestricted/releases/tag/v1.1.93) の `dsh-purge-unrestricted-1.1.93.zip` をダウンロードし、解凍したディレクトリを上記の方法で `add` します。
 
 ### 再起動と Apply
 
@@ -442,7 +449,7 @@ dsh plugin --profile desktop remove dsh-purge
 dsh plugin --profile desktop add https://codeload.github.com/yuan-dev39/dsh-purge-unrestricted/tar.gz/refs/heads/main
 ```
 
-**`cannot determine the boot profile`。** 原版クライアントをエクスプローラから起動しています。`lib/main.js` のパッチ #82 は環境変数が無いとき `DSH_PROFILE=desktop` を補います。`harness-patch-1.1.92.zip` を再適用するか、自分で設定してください：
+**`cannot determine the boot profile`。** 原版クライアントをエクスプローラから起動しています。`lib/main.js` のパッチ #82 は環境変数が無いとき `DSH_PROFILE=desktop` を補います。`harness-patch-1.1.93.zip` を再適用するか、自分で設定してください：
 
 ```powershell
 [Environment]::SetEnvironmentVariable("DSH_PROFILE", "desktop", "User")

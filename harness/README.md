@@ -250,7 +250,7 @@ Get-Content .\harness\MANIFEST.txt | ForEach-Object {
 | 内置 Node | `24.21.0` |
 | 内置 Python | `3.12.14` |
 | 内置 pnpm | `11.8.0` |
-| dsh-purge | `1.1.92`（unrestricted fork） |
+| dsh-purge | `1.1.93`（unrestricted fork） |
 | 平台 | Windows x64 |
 
 ---
